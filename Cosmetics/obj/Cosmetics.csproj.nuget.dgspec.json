@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {}
+    "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {}
   },
   "projects": {
-    "D:\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {
+    "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
+        "projectUniqueName": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
         "projectName": "Cosmetics",
-        "projectPath": "D:\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\SWD\\Cosmetics\\Cosmetics\\obj\\",
+        "projectPath": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
+        "packagesPath": "C:\\Users\\victus 16\\.nuget\\packages\\",
+        "outputPath": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\victus 16\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -26,7 +22,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -50,6 +45,42 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[14.0.0, )"
+            },
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Microsoft.AspNetCore.Cors": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.4.0, )"
@@ -74,7 +105,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.206/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
