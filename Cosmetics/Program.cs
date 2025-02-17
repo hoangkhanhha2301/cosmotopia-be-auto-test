@@ -1,4 +1,5 @@
 ﻿using Cosmetics.DTO.User;
+using Cosmetics.DTO.User.OTP;
 using Cosmetics.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -92,7 +93,14 @@ builder.Services.AddDbContext<ComedicShopDBContext>(options =>
 });
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+// Add IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEmailService, EmailService>(sp => new EmailService(
+    smtpServer: "smtp.gmail.com",
+    smtpPort: 587,
+    smtpEmail: "courtb454@gmail.com",
+    smtpPassword: "uoxy luwg yczg lxse"
+));
 
 // Add services to the container.
 
