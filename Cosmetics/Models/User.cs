@@ -7,7 +7,7 @@ namespace Cosmetics.Models;
 
 public partial class User
 {
-    public Guid UserId { get; set; }
+    public int UserId { get; set; }
 
     public string Email { get; set; }
 

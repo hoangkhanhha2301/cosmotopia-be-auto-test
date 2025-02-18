@@ -9,9 +9,9 @@ public partial class Order
 {
     public Guid OrderId { get; set; }
 
-    public Guid? CustomerId { get; set; }
+    public int? CustomerId { get; set; }
 
-    public Guid? SalesStaffId { get; set; }
+    public int? SalesStaffId { get; set; }
 
     public Guid? AffiliateProfileId { get; set; }
 

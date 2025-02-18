@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmetics - Backup (1)", "Cosmetics - Backup (1).csproj", "{841052EC-02D0-2CCE-0B2B-E906E09D37EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmetics - Backup", "Cosmetics - Backup.csproj", "{50916837-65B0-718E-E25A-A22AA566ACBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmetics", "Cosmetics.csproj", "{ABA493DD-D26B-0E1E-701F-53AC0BF9DA63}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{841052EC-02D0-2CCE-0B2B-E906E09D37EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{841052EC-02D0-2CCE-0B2B-E906E09D37EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{841052EC-02D0-2CCE-0B2B-E906E09D37EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{841052EC-02D0-2CCE-0B2B-E906E09D37EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50916837-65B0-718E-E25A-A22AA566ACBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50916837-65B0-718E-E25A-A22AA566ACBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50916837-65B0-718E-E25A-A22AA566ACBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50916837-65B0-718E-E25A-A22AA566ACBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABA493DD-D26B-0E1E-701F-53AC0BF9DA63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABA493DD-D26B-0E1E-701F-53AC0BF9DA63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABA493DD-D26B-0E1E-701F-53AC0BF9DA63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABA493DD-D26B-0E1E-701F-53AC0BF9DA63}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3282F162-EBB7-4CAB-A51B-E6B70D527D2C}
+	EndGlobalSection
+EndGlobal

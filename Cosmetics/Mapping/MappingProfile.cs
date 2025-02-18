@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
 using Cosmetics.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -10,6 +11,7 @@ namespace Cosmetics.Mapping
         public MappingProfile()
         {
             CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<Product, ProductDTO>().ReverseMap();  
         }
     }
 }

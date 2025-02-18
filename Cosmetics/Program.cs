@@ -1,5 +1,7 @@
 ﻿using Cosmetics.DTO.User;
+using Cosmetics.Interfaces;
 using Cosmetics.Models;
+using Cosmetics.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -85,7 +87,6 @@ builder.Services.AddHttpsRedirection(options =>
 });
 
 
-
 builder.Services.AddDbContext<ComedicShopDBContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -93,11 +94,15 @@ builder.Services.AddDbContext<ComedicShopDBContext>(options =>
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
 
-// Add services to the container.
+// Add Repositories and Interfaces
+builder.Services.AddScoped<IProduct, ProductRepository>();
 
-
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
