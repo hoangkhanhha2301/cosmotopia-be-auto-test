@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
 using Cosmetics.Helpers;
@@ -14,11 +16,13 @@ namespace Cosmetics.Controllers
     {
         private readonly IProduct _productRepo;
         private readonly IMapper _mapper;
+        private readonly Cloudinary _cloudinary;
 
-        public ProductController(IProduct productRepo, IMapper mapper)
+        public ProductController(IProduct productRepo, IMapper mapper, Cloudinary cloudinary)
         {
             _productRepo = productRepo;
             _mapper = mapper;
+            _cloudinary = cloudinary;
         }
 
         [HttpGet]
@@ -109,7 +113,7 @@ namespace Cosmetics.Controllers
 
         [HttpPost]
         [Route("CreateProduct")]
-        public async Task<IActionResult> Create([FromBody] CreateProductDTO productDTO)
+        public async Task<IActionResult> Create([FromForm] CreateProductDTO productDTO, List<IFormFile> imageFiles)
         {
             if(!ModelState.IsValid)
             {
@@ -141,6 +145,20 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            var imageUrls = new List<string>();
+            if(imageFiles != null && imageFiles.Count > 0)
+            {
+                foreach(var imageFile in imageFiles) 
+                { 
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream())
+                    };
+                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                    imageUrls.Add(uploadResult.SecureUrl.ToString());
+                }
+            }
+
             var productModel = new Product
             {
                 ProductId = Guid.NewGuid(),
@@ -148,7 +166,7 @@ namespace Cosmetics.Controllers
                 Description = productDTO.Description,
                 Price = productDTO.Price,
                 StockQuantity = productDTO.StockQuantity,
-                ImageUrls = productDTO.ImageUrls,
+                ImageUrls = string.Join(", ", imageUrls),
                 CommissionRate = productDTO.CommissionRate,
                 CategoryId = productDTO.CategoryId,
                 BrandId = productDTO.BrandId,

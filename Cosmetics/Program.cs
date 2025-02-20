@@ -1,4 +1,5 @@
-﻿using Cosmetics.DTO.User;
+﻿using CloudinaryDotNet;
+using Cosmetics.DTO.User;
 using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Cosmetics.Repositories;
@@ -99,6 +100,16 @@ builder.Services.AddControllers()
 {
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
+
+//Cloudinary
+var cloudinaryAccount = new Account(
+        builder.Configuration["Cloudinary:CloudName"],
+        builder.Configuration["Cloudinary:ApiKey"],
+        builder.Configuration["Cloudinary:ApiSecret"]
+    );
+
+var cloudinary = new Cloudinary(cloudinaryAccount);
+builder.Services.AddSingleton(cloudinary);
 
 // Add Repositories and Interfaces
 builder.Services.AddScoped<IProduct, ProductRepository>();
