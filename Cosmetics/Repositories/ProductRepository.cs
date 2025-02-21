@@ -75,7 +75,7 @@ namespace Cosmetics.Repositories
             existingProduct.StockQuantity = productDTO.StockQuantity;
             existingProduct.ImageUrls = productDTO.ImageUrls;
             existingProduct.CommissionRate = productDTO.CommissionRate;
-            DateTime currentTime = DateTime.UtcNow;
+            DateTime currentTime = DateTime.Now;
             existingProduct.UpdatedAt = currentTime;
             existingProduct.IsActive = productDTO.IsActive;
 

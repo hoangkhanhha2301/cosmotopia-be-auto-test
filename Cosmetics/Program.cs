@@ -114,6 +114,7 @@ builder.Services.AddSingleton(cloudinary);
 
 // Add Repositories and Interfaces
 builder.Services.AddScoped<IProduct, ProductRepository>();
+builder.Services.AddScoped<ICategory, CategoryRepository>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
