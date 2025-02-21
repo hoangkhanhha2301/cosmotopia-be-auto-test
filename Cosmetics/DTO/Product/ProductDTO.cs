@@ -1,4 +1,8 @@
-﻿namespace Cosmetics.DTO.Product
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
+namespace Cosmetics.DTO.Product
 {
     public class ProductDTO
     {
@@ -53,7 +57,8 @@
 
         public int? StockQuantity { get; set; }
 
-        public string ImageUrls { get; set; }
+        [SwaggerSchema(ReadOnly = true)]
+        public string? ImageUrls { get; set; }
 
         public decimal? CommissionRate { get; set; }
 

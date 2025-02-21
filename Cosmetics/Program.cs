@@ -77,6 +77,7 @@ builder.Services.AddSwaggerGen(option =>
                         new string[]{}
                     }
                 });
+    option.EnableAnnotations();
 });
 
 

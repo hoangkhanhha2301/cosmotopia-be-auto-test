@@ -186,7 +186,7 @@ namespace Cosmetics.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateProductDTO productDTO)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] UpdateProductDTO productDTO, List<IFormFile> imageFiles)
         {
             if(!ModelState.IsValid)
             {
@@ -197,6 +197,47 @@ namespace Cosmetics.Controllers
                     Data = ModelState
                 });
             }
+
+            var existingProduct = await _productRepo.GetByIdAsync(id);
+            if(existingProduct == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Message = "Product not found!",
+                });
+            }
+
+            //Delete old image on Cloudinary
+            if(!string.IsNullOrEmpty(existingProduct.ImageUrls))
+            {
+                var oldImageUrls = existingProduct.ImageUrls.Split(",");
+                foreach(var imageUrl in oldImageUrls)
+                {
+                    var publicId = imageUrl.Split("/").Last().Split(".").First();
+                    var deletionParams = new DeletionParams(publicId);
+                    await _cloudinary.DestroyAsync(deletionParams);
+                }
+            }
+
+            //Upload image on Cloudinary
+            var imageUrls = new List<string>();
+            if(imageFiles != null && imageFiles.Count > 0)
+            {
+                foreach(var imageFile in imageFiles)
+                {
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream())
+                    };
+
+                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                    imageUrls.Add(uploadResult.SecureUrl.ToString());
+                }
+            }
+
+            productDTO.ImageUrls = string.Join(", ", imageUrls);
 
             var update = await _productRepo.UpdateAsync(id, productDTO);
 
@@ -212,6 +253,8 @@ namespace Cosmetics.Controllers
             return Ok(new ApiResponse
             {
                 Success = true,
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Updated Product Successfully.",
                 Data = _mapper.Map<ProductDTO>(update)
             });
         }
