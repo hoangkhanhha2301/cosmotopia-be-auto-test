@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Cosmetics.DTO.Category;
 using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
 using Cosmetics.Models;
@@ -12,6 +13,7 @@ namespace Cosmetics.Mapping
         {
             CreateMap<User, UserDTO>().ReverseMap();
             CreateMap<Product, ProductDTO>().ReverseMap();  
+            CreateMap<Category, CategoryDTO>().ReverseMap();
         }
     }
 }

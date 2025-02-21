@@ -170,7 +170,7 @@ namespace Cosmetics.Controllers
                 CommissionRate = productDTO.CommissionRate,
                 CategoryId = productDTO.CategoryId,
                 BrandId = productDTO.BrandId,
-                CreateAt = DateTime.UtcNow,
+                CreateAt = DateTime.Now,
                 IsActive = true,
             };
 
@@ -209,35 +209,42 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            //Delete old image on Cloudinary
-            if(!string.IsNullOrEmpty(existingProduct.ImageUrls))
-            {
-                var oldImageUrls = existingProduct.ImageUrls.Split(",");
-                foreach(var imageUrl in oldImageUrls)
-                {
-                    var publicId = imageUrl.Split("/").Last().Split(".").First();
-                    var deletionParams = new DeletionParams(publicId);
-                    await _cloudinary.DestroyAsync(deletionParams);
-                }
-            }
-
-            //Upload image on Cloudinary
             var imageUrls = new List<string>();
-            if(imageFiles != null && imageFiles.Count > 0)
-            {
-                foreach(var imageFile in imageFiles)
+            if(imageFiles != null && imageFiles.Count > 0) 
+            { 
+                //Delete old image on Cloudinary
+                if (!string.IsNullOrEmpty(existingProduct.ImageUrls))
                 {
-                    var uploadParams = new ImageUploadParams()
+                    var oldImageUrls = existingProduct.ImageUrls.Split(",");
+                    foreach(var imageUrl in oldImageUrls)
                     {
-                        File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream())
-                    };
-
-                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                    imageUrls.Add(uploadResult.SecureUrl.ToString());
+                        var publicId = imageUrl.Split("/").Last().Split(".").First();
+                        var deletionParams = new DeletionParams(publicId);
+                        await _cloudinary.DestroyAsync(deletionParams);
+                    }
                 }
+
+                //Upload image on Cloudinary
+                if(imageFiles != null && imageFiles.Count > 0)
+                {
+                    foreach(var imageFile in imageFiles)
+                    {
+                        var uploadParams = new ImageUploadParams()
+                        {
+                            File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream())
+                        };
+
+                        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                        imageUrls.Add(uploadResult.SecureUrl.ToString());
+                    }
+                }
+
+                productDTO.ImageUrls = string.Join(", ", imageUrls);
+            } else
+            {
+                productDTO.ImageUrls = existingProduct?.ImageUrls;
             }
 
-            productDTO.ImageUrls = string.Join(", ", imageUrls);
 
             var update = await _productRepo.UpdateAsync(id, productDTO);
 
