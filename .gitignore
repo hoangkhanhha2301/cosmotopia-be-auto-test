@@ -398,3 +398,19 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+# Ignore build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.cache
+*.log
+*.vs/
+*.vscode/
+
+# Environment and dependencies
+.env
+node_modules/
+wwwroot/
