@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "Z40CM9AhcmV9qkBVAp5LEFOkSU3di8McvxC1jibfVIM=",
+  "Hash": "hMIzsbJbidGS0gnYRj9mHir5n0gxB3e5k+dSRANlU2M=",
   "Source": "Cosmetics",
   "BasePath": "_content/Cosmetics",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }
