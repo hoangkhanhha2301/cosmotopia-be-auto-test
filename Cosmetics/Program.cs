@@ -1,6 +1,10 @@
-﻿using Cosmetics.DTO.User;
+﻿using CloudinaryDotNet;
+using Cosmetics.DTO.User;
+using Cosmetics.Interfaces;
 using Cosmetics.Models;
+
 using Cosmetics.Service.OTP;
+
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -75,6 +79,7 @@ builder.Services.AddSwaggerGen(option =>
                         new string[]{}
                     }
                 });
+    option.EnableAnnotations();
 });
 
 
@@ -86,13 +91,13 @@ builder.Services.AddHttpsRedirection(options =>
 });
 
 
-
 builder.Services.AddDbContext<ComedicShopDBContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 // Add IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmailService, EmailService>(sp => new EmailService(
@@ -101,11 +106,30 @@ builder.Services.AddScoped<IEmailService, EmailService>(sp => new EmailService(
     smtpEmail: "courtb454@gmail.com",
     smtpPassword: "uoxy luwg yczg lxse"
 ));
+=======
 
-// Add services to the container.
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
+
+//Cloudinary
+var cloudinaryAccount = new Account(
+        builder.Configuration["Cloudinary:CloudName"],
+        builder.Configuration["Cloudinary:ApiKey"],
+        builder.Configuration["Cloudinary:ApiSecret"]
+    );
 
 
-builder.Services.AddControllers();
+var cloudinary = new Cloudinary(cloudinaryAccount);
+builder.Services.AddSingleton(cloudinary);
+
+// Add Repositories and Interfaces
+builder.Services.AddScoped<IProduct, ProductRepository>();
+builder.Services.AddScoped<ICategory, CategoryRepository>();
+builder.Services.AddScoped<IBrand, BrandRepository>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
