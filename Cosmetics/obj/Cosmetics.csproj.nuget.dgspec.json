@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {}
+    "E:\\Learning Material\\Ki 7\\SWD392\\Project\\Back-End\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {}
   },
   "projects": {
-    "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {
+    "E:\\Learning Material\\Ki 7\\SWD392\\Project\\Back-End\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
+        "projectUniqueName": "E:\\Learning Material\\Ki 7\\SWD392\\Project\\Back-End\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
         "projectName": "Cosmetics",
-        "projectPath": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
-        "packagesPath": "C:\\Users\\victus 16\\.nuget\\packages\\",
-        "outputPath": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\obj\\",
+        "projectPath": "E:\\Learning Material\\Ki 7\\SWD392\\Project\\Back-End\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
+        "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
+        "outputPath": "E:\\Learning Material\\Ki 7\\SWD392\\Project\\Back-End\\Cosmetics\\Cosmetics\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\victus 16\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\pc\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -22,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -39,7 +44,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -53,6 +59,10 @@
               "target": "Package",
               "version": "[4.0.3, )"
             },
+            "CloudinaryDotNet": {
+              "target": "Package",
+              "version": "[1.27.4, )"
+            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[8.0.6, )"
@@ -60,6 +70,10 @@
             "Microsoft.AspNetCore.Cors": {
               "target": "Package",
               "version": "[2.3.0, )"
+            },
+            "Microsoft.AspNetCore.Mvc.NewtonsoftJson": {
+              "target": "Package",
+              "version": "[8.0.6, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -84,6 +98,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.4.0, )"
+            },
+            "Swashbuckle.AspNetCore.Annotations": {
+              "target": "Package",
+              "version": "[7.2.0, )"
             }
           },
           "imports": [
@@ -105,7 +123,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.206/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

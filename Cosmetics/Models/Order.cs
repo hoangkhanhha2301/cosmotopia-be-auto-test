@@ -18,6 +18,11 @@ public partial class Order
     public decimal? TotalAmount { get; set; }
 
     public bool? Status { get; set; }
+    //1 : chờ xác nhận
+    //2 : xác nhận
+    //3 : đang vận chuyển
+    //4 : hoàn tất
+    //5 : hủy
 
     public DateTime? OrderDate { get; set; }
 
