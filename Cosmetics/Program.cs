@@ -106,7 +106,7 @@ builder.Services.AddScoped<IEmailService, EmailService>(sp => new EmailService(
     smtpEmail: "courtb454@gmail.com",
     smtpPassword: "uoxy luwg yczg lxse"
 ));
-=======
+
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
