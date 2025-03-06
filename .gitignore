@@ -398,27 +398,3 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-# Ignore build output
-bin/
-obj/
-*.exe
-*.dll
-*.pdb
-*.nuget.cache
-*.nuget.g.props
-*.nuget.g.targets
-project.assets.json
-
-
-# User-specific files
-*.user
-*.suo
-*.cache
-*.log
-*.vs/
-*.vscode/
-
-# Environment and dependencies
-.env
-node_modules/
-wwwroot/
