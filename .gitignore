@@ -401,6 +401,14 @@ FodyWeavers.xsd
 # Ignore build output
 bin/
 obj/
+*.exe
+*.dll
+*.pdb
+*.nuget.cache
+*.nuget.g.props
+*.nuget.g.targets
+project.assets.json
+
 
 # User-specific files
 *.user
