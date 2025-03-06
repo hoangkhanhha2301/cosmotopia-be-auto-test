@@ -8,11 +8,13 @@ namespace Cosmetics.Repositories.UnitOfWork
     {
         private readonly ComedicShopDBContext _context;
         public IOrderRepository Orders { get; }
+        public IOrderDetailRepository OrderDetails { get; }
 
-        public UnitOfWork(ComedicShopDBContext context, IOrderRepository orderRepository)
+        public UnitOfWork(ComedicShopDBContext context, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository)
         {
             _context = context;
             Orders = orderRepository;
+            OrderDetails = orderDetailRepository;
         }
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
