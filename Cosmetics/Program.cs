@@ -2,7 +2,7 @@
 using Cosmetics.DTO.User;
 using Cosmetics.Interfaces;
 using Cosmetics.Models;
-
+using Cosmetics.Repositories;
 using Cosmetics.Service.OTP;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
