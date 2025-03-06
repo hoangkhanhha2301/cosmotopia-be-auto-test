@@ -10,7 +10,7 @@ namespace ComedicShopAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Administrator")] // Chỉ Admin mới có quyền truy cập
+    [Authorize(Roles = "Administrator")] 
     public class RolesController : ControllerBase
     {
         private readonly ComedicShopDBContext _context;

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Cosmetics")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fcb59a0458812195e0d509f7ee56e91809ee578e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9706d4b108c9d479c56da535b98c9086dbad6696")]
 [assembly: System.Reflection.AssemblyProductAttribute("Cosmetics")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Cosmetics")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

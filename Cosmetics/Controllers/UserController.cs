@@ -146,6 +146,9 @@ namespace ComedicShopAPI.Controllers
             });
         }
 
+      
+
+
         [HttpPost("registerwithotp")]
         public async Task<IActionResult> RegisterWithOtp(SendOtpModel model)
         {
@@ -204,7 +207,7 @@ namespace ComedicShopAPI.Controllers
                 Phone = model.Phone,
                 RoleType = 3, // Set RoleType to 3 for User
                 Otp = hashedOtp, // Save hashed OTP
-                OtpExpiration = DateTime.UtcNow.AddMinutes(5), // Example: OTP expires in 5 minutes
+                OtpExpiration = DateTime.UtcNow.AddMinutes(3), 
                 Verify = 0 // Not verified yet
             };
 
@@ -279,7 +282,48 @@ namespace ComedicShopAPI.Controllers
             });
         }
 
-      
+
+        [HttpPost("become-affiliate")]
+        public async Task<IActionResult> BecomeAffiliate()
+        {
+            // Lấy thông tin user từ token
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                return Unauthorized(new ApiResponse { Success = false, Message = "User not authenticated" });
+            }
+
+            var user = await _context.Users.FindAsync(parsedUserId);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse { Success = false, Message = "User not found" });
+            }
+
+            
+            const int AffiliateRole = 5; // 
+            if (user.RoleType == AffiliateRole)
+            {
+                return BadRequest(new ApiResponse { Success = false, Message = "You are already an Affiliate" });
+            }
+
+            // Cập nhật quyền hạn thành Affiliate
+            user.RoleType = AffiliateRole;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Tạo token mới phản ánh role Affiliate
+            var newToken = GenerateToken(user);
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Successfully registered as an Affiliate",
+                Data = new { UserId = user.UserId, Role = GetUserRole(user.RoleType), Token = newToken }
+            });
+        }
+
+
+
 
         private string GenerateToken(User user)
         {
@@ -322,7 +366,10 @@ namespace ComedicShopAPI.Controllers
                     return "Customers";
                 case 4:
                     return "Sales Staff";
+                case 5:
+                    return "Affiliate";
                 default:
+
                     return null;
             }
         }

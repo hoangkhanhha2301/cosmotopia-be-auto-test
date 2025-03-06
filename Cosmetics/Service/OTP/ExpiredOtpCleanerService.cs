@@ -1,5 +1,11 @@
 ﻿using Cosmetics.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Cosmetics.Service.OTP
 {
@@ -16,8 +22,16 @@ namespace Cosmetics.Service.OTP
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await CleanExpiredOtpsAsync();
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // Run every 1 minute
+                try
+                {
+                    await CleanExpiredOtpsAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi xóa OTP hết hạn: {ex.Message}");
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // Chạy mỗi 1 phút
             }
         }
 
@@ -25,7 +39,12 @@ namespace Cosmetics.Service.OTP
         {
             using (var scope = _serviceProvider.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<ComedicShopDBContext>();
+                var context = scope.ServiceProvider.GetService<ComedicShopDBContext>();
+                if (context == null)
+                {
+                    Console.WriteLine("Không thể lấy `ComedicShopDBContext` từ DI container.");
+                    return;
+                }
 
                 var expiredUsers = await context.Users
                     .Where(u => u.OtpExpiration <= DateTime.UtcNow && u.Verify != 4)
@@ -33,8 +52,10 @@ namespace Cosmetics.Service.OTP
 
                 if (expiredUsers.Any())
                 {
+                    Console.WriteLine($"🔍 Đang xóa {expiredUsers.Count} người dùng có OTP hết hạn...");
                     context.Users.RemoveRange(expiredUsers);
                     await context.SaveChangesAsync();
+                    Console.WriteLine($"✅ Đã xóa {expiredUsers.Count} người dùng.");
                 }
             }
         }

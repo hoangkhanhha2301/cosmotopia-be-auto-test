@@ -83,6 +83,7 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 
+
 // Add services to the container
 builder.Services.AddHttpsRedirection(options =>
 {
@@ -129,8 +130,11 @@ builder.Services.AddSingleton(cloudinary);
 builder.Services.AddScoped<IProduct, ProductRepository>();
 builder.Services.AddScoped<ICategory, CategoryRepository>();
 builder.Services.AddScoped<IBrand, BrandRepository>();
+builder.Services.AddHostedService<ExpiredOtpCleanerService>();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+
+// Learn more about configuring Swagger/OpenAPI at
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
