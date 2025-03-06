@@ -1,6 +1,6 @@
 ﻿using Cosmetics.DTO.User;
-using Cosmetics.DTO.User.OTP;
 using Cosmetics.Models;
+using Cosmetics.Service.OTP;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

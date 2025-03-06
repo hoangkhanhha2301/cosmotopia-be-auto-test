@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Cosmetics.DTO.User.OTP
+namespace Cosmetics.Service.OTP
 {
     public class PhoneNumberAttribute : ValidationAttribute
     {

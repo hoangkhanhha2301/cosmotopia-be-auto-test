@@ -43,7 +43,7 @@ public partial class ComedicShopDBContext : DbContext
     {
         modelBuilder.Entity<AffiliateLink>(entity =>
         {
-            entity.HasKey(e => e.AffiliateLinkId).HasName("PK__Affiliat__0DFFE77F47A40601");
+            entity.HasKey(e => e.AffiliateLinkId).HasName("PK__Affiliat__0DFFE77F606C9FF1");
 
             entity.Property(e => e.AffiliateLinkId).ValueGeneratedNever();
             entity.Property(e => e.Clicks).HasDefaultValue(0);
@@ -69,7 +69,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<AffiliatePayment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Affiliat__9B556A3833637910");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Affiliat__9B556A380FAB0E11");
 
             entity.Property(e => e.PaymentId).ValueGeneratedNever();
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
@@ -90,7 +90,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<AffiliateProfile>(entity =>
         {
-            entity.HasKey(e => e.AffiliateProfileId).HasName("PK__Affiliat__E898D6673D464027");
+            entity.HasKey(e => e.AffiliateProfileId).HasName("PK__Affiliat__E898D667E2E619A7");
 
             entity.Property(e => e.AffiliateProfileId).ValueGeneratedNever();
             entity.Property(e => e.ApplicationStatus)
@@ -116,7 +116,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Brand>(entity =>
         {
-            entity.HasKey(e => e.BrandId).HasName("PK__Brands__DAD4F05E049EF2EF");
+            entity.HasKey(e => e.BrandId).HasName("PK__Brands__DAD4F05E4E1CA2B3");
 
             entity.Property(e => e.BrandId).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt)
@@ -131,7 +131,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B8CD51BF6");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0BA5E07C6E");
 
             entity.Property(e => e.CategoryId).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt)
@@ -146,7 +146,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF08004A18");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF6642780B");
 
             entity.Property(e => e.OrderId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.OrderDate)
@@ -172,7 +172,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36C5155A248");
+            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36C394F1331");
 
             entity.Property(e => e.OrderDetailId).ValueGeneratedNever();
             entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18, 2)");
@@ -189,7 +189,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Permission>(entity =>
         {
-            entity.HasKey(e => e.PermissionId).HasName("PK__Permissi__EFA6FB2FA4C824F6");
+            entity.HasKey(e => e.PermissionId).HasName("PK__Permissi__EFA6FB2FBBFE81F3");
 
             entity.Property(e => e.PermissionId).ValueGeneratedNever();
             entity.Property(e => e.Description).HasColumnType("text");
@@ -200,7 +200,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CDFB8239F0");
+            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CD1FC3F48D");
 
             entity.Property(e => e.ProductId).ValueGeneratedNever();
             entity.Property(e => e.CommissionRate).HasColumnType("decimal(5, 2)");
@@ -228,13 +228,10 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE1A87918C87");
+            entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE1A7CA3EC7E");
 
             entity.Property(e => e.RoleId).ValueGeneratedNever();
-            entity.Property(e => e.Description).HasColumnType("text");
-            entity.Property(e => e.RoleName)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.RoleName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<RolePermission>(entity =>
@@ -252,7 +249,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCAC207F9D64");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACDCB8A3EA");
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.CreateAt)
@@ -287,7 +284,7 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<UserRole>(entity =>
         {
-            entity.HasKey(e => e.UserRoleId).HasName("PK__UserRole__3D978A35BCE6301A");
+            entity.HasKey(e => e.UserRoleId).HasName("PK__UserRole__3D978A35DE7F5154");
 
             entity.Property(e => e.UserRoleId).HasDefaultValueSql("(newid())");
 

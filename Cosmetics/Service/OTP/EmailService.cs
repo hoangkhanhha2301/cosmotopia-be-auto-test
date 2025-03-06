@@ -3,7 +3,8 @@ using MimeKit;
 using System.Net.Mail;
 using MailKit.Net.Smtp;
 using System.Threading.Tasks;
-namespace Cosmetics.DTO.User.OTP
+
+namespace Cosmetics.Service.OTP
 {
     public class EmailService : IEmailService
     {

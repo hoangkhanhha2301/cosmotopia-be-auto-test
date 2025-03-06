@@ -1,4 +1,4 @@
-﻿namespace Cosmetics.DTO.User.OTP
+﻿namespace Cosmetics.Service.OTP
 {
     public interface IEmailService
     {

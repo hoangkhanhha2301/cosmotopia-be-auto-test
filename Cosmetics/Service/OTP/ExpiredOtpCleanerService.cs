@@ -1,7 +1,7 @@
 ﻿using Cosmetics.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cosmetics.DTO.User.OTP
+namespace Cosmetics.Service.OTP
 {
     public class ExpiredOtpCleanerService : BackgroundService
     {

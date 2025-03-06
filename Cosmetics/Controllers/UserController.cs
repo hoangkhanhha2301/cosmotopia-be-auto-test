@@ -17,7 +17,7 @@ using BCrypt.Net;
 using Cosmetics.DTO.User;
 using AutoMapper;
 using Microsoft.Extensions.Options;
-using Cosmetics.DTO.User.OTP;
+using Cosmetics.Service.OTP;
 
 namespace ComedicShopAPI.Controllers
 {
@@ -278,6 +278,8 @@ namespace ComedicShopAPI.Controllers
                 Message = "Invalid OTP or OTP has expired"
             });
         }
+
+      
 
         private string GenerateToken(User user)
         {
