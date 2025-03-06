@@ -17,6 +17,7 @@ using BCrypt.Net;
 using Cosmetics.DTO.User;
 using AutoMapper;
 using Microsoft.Extensions.Options;
+using Cosmetics.Service.OTP;
 
 namespace ComedicShopAPI.Controllers
 {
@@ -27,12 +28,14 @@ namespace ComedicShopAPI.Controllers
         private readonly ComedicShopDBContext _context;
         private readonly AppSetting _appSettings;
         private readonly IMapper _mapper;
+        private readonly IEmailService _emailService;
 
-        public UserController(ComedicShopDBContext context, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper)
+        public UserController(ComedicShopDBContext context, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService)
         {
             _context = context;
             _appSettings = optionsMonitor.CurrentValue;
             _mapper = mapper;
+            _emailService = emailService;
         }
 
         [HttpPost("Login")]
@@ -142,6 +145,141 @@ namespace ComedicShopAPI.Controllers
                 Data = new { Id = id, FirstName = firstname, LastName = lastname, Email = email, Phone = phone, Role = role, Token = token }
             });
         }
+
+        [HttpPost("registerwithotp")]
+        public async Task<IActionResult> RegisterWithOtp(SendOtpModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data",
+                    Data = ModelState
+                });
+            }
+
+            if (model.Password != model.ConfirmPassword)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Password and confirm password do not match"
+                });
+            }
+
+            var existingUserByUsername = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (existingUserByUsername != null)
+            {
+                return Ok(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Email already exists"
+                });
+            }
+
+
+            var existingUserByPhone = await _context.Users.SingleOrDefaultAsync(u => u.Phone == model.Phone);
+            if (existingUserByPhone != null)
+            {
+                return Ok(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Phone number already exists"
+                });
+            }
+
+            // Generate random OTP
+            var otp = new Random().Next(100000, 999999).ToString();
+
+            // Hash OTP before saving to database
+            var hashedOtp = BCrypt.Net.BCrypt.HashPassword(otp);
+
+            var user = new User
+            {
+                Email = model.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(model.Password), // Hashed password
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Phone = model.Phone,
+                RoleType = 3, // Set RoleType to 3 for User
+                Otp = hashedOtp, // Save hashed OTP
+                OtpExpiration = DateTime.UtcNow.AddMinutes(5), // Example: OTP expires in 5 minutes
+                Verify = 0 // Not verified yet
+            };
+
+            _context.Users.Add(user);
+
+            try
+            {
+                await _emailService.SendEmailAsync(model.Email, "Your OTP Code", $"Your OTP code is {otp}");
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Registration successful. OTP sent successfully."
+                });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Extract the inner exception details
+                var innerException = dbEx.InnerException != null ? dbEx.InnerException.Message : dbEx.Message;
+                return StatusCode(500, new ApiResponse { Success = false, Message = $"Failed to send OTP: {innerException}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse { Success = false, Message = $"An unexpected error occurred: {ex.Message}" });
+            }
+        }
+
+
+
+        [HttpPost("verifyotp")]
+        public async Task<IActionResult> VerifyOtp(VerifyOtpModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data",
+                    Data = ModelState
+                });
+            }
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
+            {
+                return Ok(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid Email/OTP"
+                });
+            }
+
+            // Compare hashed OTP input with hashed OTP stored in database and check expiration
+            if (BCrypt.Net.BCrypt.Verify(model.Otp, user.Otp) && user.OtpExpiration > DateTime.UtcNow)
+            {
+                user.Verify = 4;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "OTP verified successfully"
+                });
+            }
+
+            return Ok(new ApiResponse
+            {
+                Success = false,
+                Message = "Invalid OTP or OTP has expired"
+            });
+        }
+
+      
 
         private string GenerateToken(User user)
         {

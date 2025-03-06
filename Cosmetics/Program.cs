@@ -2,7 +2,9 @@
 using Cosmetics.DTO.User;
 using Cosmetics.Interfaces;
 using Cosmetics.Models;
-using Cosmetics.Repositories;
+
+using Cosmetics.Service.OTP;
+
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +98,16 @@ builder.Services.AddDbContext<ComedicShopDBContext>(options =>
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+// Add IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEmailService, EmailService>(sp => new EmailService(
+    smtpServer: "smtp.gmail.com",
+    smtpPort: 587,
+    smtpEmail: "courtb454@gmail.com",
+    smtpPassword: "uoxy luwg yczg lxse"
+));
+=======
+
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
 {
@@ -108,6 +120,7 @@ var cloudinaryAccount = new Account(
         builder.Configuration["Cloudinary:ApiKey"],
         builder.Configuration["Cloudinary:ApiSecret"]
     );
+
 
 var cloudinary = new Cloudinary(cloudinaryAccount);
 builder.Services.AddSingleton(cloudinary);
