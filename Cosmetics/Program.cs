@@ -3,8 +3,8 @@ using Cosmetics.DTO.User;
 using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Cosmetics.Repositories;
+using Cosmetics.Repositories.UnitOfWork;
 using Cosmetics.Service.OTP;
-
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -131,6 +131,10 @@ builder.Services.AddScoped<IProduct, ProductRepository>();
 builder.Services.AddScoped<ICategory, CategoryRepository>();
 builder.Services.AddScoped<IBrand, BrandRepository>();
 builder.Services.AddHostedService<ExpiredOtpCleanerService>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
 
 
 

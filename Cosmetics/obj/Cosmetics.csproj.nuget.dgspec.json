@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {}
+    "D:\\CN7\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {}
   },
   "projects": {
-    "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {
+    "D:\\CN7\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
+        "projectUniqueName": "D:\\CN7\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
         "projectName": "Cosmetics",
-        "projectPath": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
+        "projectPath": "D:\\CN7\\SWD\\Cosmetics\\Cosmetics\\Cosmetics.csproj",
         "packagesPath": "C:\\Users\\victus 16\\.nuget\\packages\\",
-        "outputPath": "D:\\SWD Comedics\\Cosmetics\\Cosmetics\\obj\\",
+        "outputPath": "D:\\CN7\\SWD\\Cosmetics\\Cosmetics\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\victus 16\\AppData\\Roaming\\NuGet\\NuGet.Config",
