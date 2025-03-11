@@ -10,5 +10,6 @@ namespace Cosmetics.Interfaces
         Task<Category?> UpdateAsync(Guid id, UpdateCategoryDTO categoryDTO);
         Task<Category?> DeleteAsync(Guid id);
         Task<Category> CreateAsync(Category categoryModel);
+        Task<bool> CategoryHasProducts(Guid id);
     }
 }

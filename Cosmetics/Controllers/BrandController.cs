@@ -124,6 +124,18 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            var hasProducts = await _brandRepo.BrandHasProducts(id);
+
+            if (hasProducts)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Cannot delete a brand that has products!",
+                    StatusCode = StatusCodes.Status403Forbidden,
+                }); 
+            }
+
             var brand = await _brandRepo.DeleteByIdAsync(id);
 
             if (brand == null)
@@ -136,7 +148,11 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            return NoContent();
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Brand deleted successfully"
+            });
         }
 
         [HttpPut]

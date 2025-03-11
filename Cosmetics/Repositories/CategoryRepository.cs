@@ -14,6 +14,11 @@ namespace Cosmetics.Repositories
             _context = context;
         }
 
+        public async Task<bool> CategoryHasProducts(Guid id)
+        {
+            return await _context.Products.AnyAsync(p => p.CategoryId == id);
+        }
+
         public async Task<Category> CreateAsync(Category categoryModel)
         {
             await _context.AddAsync(categoryModel);
