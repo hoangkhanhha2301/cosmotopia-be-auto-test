@@ -1,4 +1,6 @@
-﻿using Swashbuckle.AspNetCore.Annotations;
+﻿using Cosmetics.DTO.Brand;
+using Cosmetics.DTO.Category;
+using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -28,6 +30,9 @@ namespace Cosmetics.DTO.Product
         public DateTime? UpdatedAt { get; set; }
 
         public bool? IsActive { get; set; }
+
+        public CategoryDTO  Category { get; set; }
+        public BrandDTO Brand { get; set; }
     }
 
     public class CreateProductDTO
