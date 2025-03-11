@@ -125,6 +125,18 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            var hasProducts = await _categoryRepo.CategoryHasProducts(id);
+
+            if(hasProducts)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Cannot delete a category that has products!",
+                    StatusCode = StatusCodes.Status403Forbidden,
+                });
+            }
+
             var category = await _categoryRepo.DeleteAsync(id);
 
             if(category == null)
@@ -137,7 +149,11 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            return NoContent();
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Category deleted successfully."
+            });
         }
 
         [HttpPut]

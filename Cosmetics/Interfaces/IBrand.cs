@@ -10,5 +10,6 @@ namespace Cosmetics.Interfaces
         Task<Brand?> DeleteByIdAsync(Guid id);
         Task<Brand> CreateAsync(Brand brandModel);
         Task<Brand?> UpdateAsync(Guid id, UpdateBrandDTO brandDTO);
+        Task<bool> BrandHasProducts(Guid id);
     }
 }
