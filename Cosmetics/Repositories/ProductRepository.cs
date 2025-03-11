@@ -47,7 +47,7 @@ namespace Cosmetics.Repositories
 
         public async Task<List<Product>> GetAllAsync(QueryObject query)
         {
-            var queryObject = _context.Products.AsQueryable();
+            var queryObject = _context.Products.Include(b => b.Brand).Include(c => c.Category).AsQueryable();
 
             #region Pagination
             var skipNumber = (query.pageNumber - 1) * query.pageSize;
