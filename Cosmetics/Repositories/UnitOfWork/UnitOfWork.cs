@@ -10,11 +10,20 @@ namespace Cosmetics.Repositories.UnitOfWork
         public IOrderRepository Orders { get; }
         public IOrderDetailRepository OrderDetails { get; }
 
-        public UnitOfWork(ComedicShopDBContext context, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository)
+        public IBrandRepository Brands { get; }
+
+        public ICategoryRepository Categories {  get; }
+
+        public IProductRepository Products { get; }
+
+        public UnitOfWork(ComedicShopDBContext context, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBrandRepository brandRepository, ICategoryRepository categoryRepository, IProductRepository productRepository)
         {
             _context = context;
             Orders = orderRepository;
             OrderDetails = orderDetailRepository;
+            Brands = brandRepository;
+            Categories = categoryRepository;
+            Products = productRepository;
         }
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();

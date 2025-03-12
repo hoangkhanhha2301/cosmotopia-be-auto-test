@@ -7,6 +7,9 @@ namespace Cosmetics.Repositories.UnitOfWork
         IOrderRepository Orders { get; }
         Task<int> CompleteAsync();
         IOrderDetailRepository OrderDetails { get; }
+        IBrandRepository Brands { get; }
+        ICategoryRepository Categories { get; }
+        IProductRepository Products { get; }
     }
 
 }

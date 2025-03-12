@@ -3,9 +3,8 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
-using Cosmetics.Helpers;
-using Cosmetics.Interfaces;
 using Cosmetics.Models;
+using Cosmetics.Repositories.UnitOfWork;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmetics.Controllers
@@ -14,20 +13,20 @@ namespace Cosmetics.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        private readonly IProduct _productRepo;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly Cloudinary _cloudinary;
 
-        public ProductController(IProduct productRepo, IMapper mapper, Cloudinary cloudinary)
+        public ProductController(IUnitOfWork unitOfWork, IMapper mapper, Cloudinary cloudinary)
         {
-            _productRepo = productRepo;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _cloudinary = cloudinary;
         }
 
         [HttpGet]
         [Route("GetAllProduct")]
-        public async Task<IActionResult> GetAll([FromQuery] QueryObject query)
+        public async Task<IActionResult> GetAll(string search = null, int? page = null, int? pageSize = null, string sortBy = null)
         {
             if(!ModelState.IsValid)
             {
@@ -39,7 +38,20 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var products = await _productRepo.GetAllAsync(query);
+            page ??= 1;
+
+            var products = await _unitOfWork.Products.GetAsync(
+                filter: p => string.IsNullOrEmpty(search) || p.Name.ToLower().Contains(search.ToLower()),
+                orderBy: sortBy switch
+                {
+                    "price" => q => q.OrderBy(p => p.Price),
+                    _ => q => q.OrderBy(p => p.ProductId),
+                },
+                page: page,
+                pageSize: pageSize,
+                includes: [p => p.Brand, p => p.Category]
+                );
+
             var productDTO = _mapper.Map<List<ProductDTO>>(products);
             return Ok(new ApiResponse
             {
@@ -63,7 +75,12 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var product = await _productRepo.GetByIdAsync(id);
+            var products = await _unitOfWork.Products.GetAsync(
+                filter: p => p.ProductId == id,
+                includes: [p => p.Brand, p => p.Category]
+                );
+
+            var product = products.FirstOrDefault();
 
             if(product == null)
             {
@@ -97,7 +114,8 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var product = await _productRepo.DeleteAsync(id);
+            var product = await _unitOfWork.Products.GetByIdAsync(id);
+
             if(product == null)
             {
                 return Ok(new ApiResponse
@@ -108,12 +126,19 @@ namespace Cosmetics.Controllers
                 }); 
             }
 
-            return NoContent();
+             _unitOfWork.Products.Delete(product);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Product deleted successfully"
+            });
         }
 
         [HttpPost]
         [Route("CreateProduct")]
-        public async Task<IActionResult> Create([FromForm] CreateProductDTO productDTO, List<IFormFile> imageFiles)
+        public async Task<IActionResult> Create([FromForm] ProductCreateDTO productDTO, List<IFormFile> imageFiles)
         {
             if(!ModelState.IsValid)
             {
@@ -125,7 +150,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            if(!await _productRepo.CategoryExist(productDTO.CategoryId.Value)) 
+            if(!await _unitOfWork.Products.CategoryExist(productDTO.CategoryId.Value)) 
             {
                 return BadRequest(new ApiResponse
                 {
@@ -135,7 +160,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            if(!await _productRepo.BranchExist(productDTO.BrandId.Value))
+            if(!await _unitOfWork.Products.BranchExist(productDTO.BrandId.Value))
             {
                 return BadRequest(new ApiResponse
                 {
@@ -174,7 +199,9 @@ namespace Cosmetics.Controllers
                 IsActive = true,
             };
 
-            await _productRepo.CreateAsync(productModel);
+            await _unitOfWork.Products.AddAsync(productModel);
+            await _unitOfWork.CompleteAsync();
+
             return Ok(new ApiResponse
             {
                 Success = true,
@@ -186,7 +213,7 @@ namespace Cosmetics.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] UpdateProductDTO productDTO, List<IFormFile> imageFiles)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] ProductUpdateDTO productDTO, List<IFormFile> imageFiles)
         {
             if(!ModelState.IsValid)
             {
@@ -198,7 +225,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var existingProduct = await _productRepo.GetByIdAsync(id);
+            var existingProduct = await _unitOfWork.Products.GetByIdAsync(id);
             if(existingProduct == null)
             {
                 return NotFound(new ApiResponse
@@ -245,24 +272,24 @@ namespace Cosmetics.Controllers
                 productDTO.ImageUrls = existingProduct?.ImageUrls;
             }
 
+            existingProduct.Name = productDTO.Name;
+            existingProduct.Description = productDTO.Description;
+            existingProduct.Price = productDTO.Price;
+            existingProduct.StockQuantity = productDTO.StockQuantity;
+            existingProduct.ImageUrls = productDTO.ImageUrls;
+            existingProduct.CommissionRate = productDTO.CommissionRate;
+            existingProduct.IsActive = productDTO.IsActive;
 
-            var update = await _productRepo.UpdateAsync(id, productDTO);
+             _unitOfWork.Products.Update(existingProduct);
+            await _unitOfWork.CompleteAsync();
 
-            if(update == null)
-            {
-                return Ok(new ApiResponse
-                {
-                    Success = false,
-                    Message = "Product not found!"
-                });
-            }
 
             return Ok(new ApiResponse
             {
                 Success = true,
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Updated Product Successfully.",
-                Data = _mapper.Map<ProductDTO>(update)
+                Data = _mapper.Map<ProductDTO>(existingProduct)
             });
         }
     }

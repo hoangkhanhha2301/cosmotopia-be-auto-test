@@ -6,7 +6,6 @@ using Cosmetics.DTO.OrderDetail;
 using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
 using Cosmetics.Models;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Cosmetics.Mapping
 {
@@ -15,10 +14,18 @@ namespace Cosmetics.Mapping
         public MappingProfile()
         {
             CreateMap<User, UserDTO>().ReverseMap();
+            //Product
             CreateMap<Product, ProductDTO>().ReverseMap();  
+            CreateMap<Product, ProductCreateDTO>().ReverseMap();
+            CreateMap<Product, ProductUpdateDTO>().ReverseMap();
+            //Category
             CreateMap<Category, CategoryDTO>().ReverseMap();
+            CreateMap<Category, CategoryCreateDTO>().ReverseMap();
+            CreateMap<Category, CategoryUpdateDTO>().ReverseMap();
+            //Brand
             CreateMap<Brand, BrandDTO>().ReverseMap();
-
+            CreateMap<Brand, BrandCreateDTO>().ReverseMap();
+            CreateMap<Brand, BrandUpdateDTO>().ReverseMap();
             //Order
             CreateMap<Order, OrderCreateDTO>().ReverseMap();
             CreateMap<Order, OrderResponseDTO>().ReverseMap();
