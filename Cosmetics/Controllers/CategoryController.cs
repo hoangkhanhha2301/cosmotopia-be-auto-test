@@ -3,6 +3,7 @@ using Cosmetics.DTO.Category;
 using Cosmetics.DTO.User;
 using Cosmetics.Interfaces;
 using Cosmetics.Models;
+using Cosmetics.Repositories.UnitOfWork;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,12 +13,12 @@ namespace Cosmetics.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategory _categoryRepo;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public CategoryController(ICategory categoryRepo, IMapper mapper) 
+        public CategoryController(IUnitOfWork unitOfWork, IMapper mapper) 
         {
-            _categoryRepo = categoryRepo;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
@@ -35,7 +36,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var categories = await _categoryRepo.GetAllAsync();
+            var categories = await _unitOfWork.Categories.GetAllAsync();
             var categoryDTO = _mapper.Map<List<CategoryDTO>>(categories);
 
             return Ok(new ApiResponse 
@@ -60,7 +61,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var category = await _categoryRepo.GetByIdAsync(id);
+            var category = await _unitOfWork.Categories.GetByIdAsync(id);
             if (category == null)
             {
                 return Ok(new ApiResponse
@@ -81,7 +82,7 @@ namespace Cosmetics.Controllers
 
         [HttpPost]
         [Route("CreateCategory")]
-        public async Task<IActionResult> Create([FromBody] CreateCategoryDTO categoryDTO)
+        public async Task<IActionResult> Create([FromBody] CategoryCreateDTO categoryDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -101,7 +102,18 @@ namespace Cosmetics.Controllers
                 CreatedAt = DateTime.Now,
             };
 
-            await _categoryRepo.CreateAsync(categoryModel);
+            if(await _unitOfWork.Categories.categoryNameExist(categoryModel.Name))
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "CategoryName already exist!"
+                });
+            }
+
+            await _unitOfWork.Categories.AddAsync(categoryModel);
+            await _unitOfWork.CompleteAsync();
+
             return Ok(new ApiResponse
             {
                 Success = true,
@@ -125,7 +137,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var hasProducts = await _categoryRepo.CategoryHasProducts(id);
+            var hasProducts = await _unitOfWork.Categories.categoryHasProducts(id);
 
             if(hasProducts)
             {
@@ -137,7 +149,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var category = await _categoryRepo.DeleteAsync(id);
+            var category = await _unitOfWork.Categories.GetByIdAsync(id);
 
             if(category == null)
             {
@@ -149,6 +161,9 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            _unitOfWork.Categories.Delete(category);
+            await _unitOfWork.CompleteAsync();
+
             return Ok(new ApiResponse
             {
                 Success = true,
@@ -158,7 +173,7 @@ namespace Cosmetics.Controllers
 
         [HttpPut]
         [Route("UpdateCategoryBy/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateCategoryDTO categoryDTO )
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] CategoryUpdateDTO categoryDTO )
         {
             if (!ModelState.IsValid)
             {
@@ -170,7 +185,8 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var update = await _categoryRepo.UpdateAsync(id, categoryDTO);
+            var update = await _unitOfWork.Categories.GetByIdAsync(id);
+
             if (update == null)
             {
                 return Ok(new ApiResponse
@@ -181,9 +197,25 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            update.Name = categoryDTO.Name;
+            update.Description = categoryDTO.Description;
+
+            if(await _unitOfWork.Categories.categoryNameExist(update.Name))
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "CategoryName already exist!"
+                });
+            }
+
+            _unitOfWork.Categories.Update(update);
+            await _unitOfWork.CompleteAsync();
+
             return Ok(new ApiResponse
             {
                 Success = true,
+                Message = "Category updated successfully",
                 Data = _mapper.Map<CategoryDTO>(update)
             });
         }

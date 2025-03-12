@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
 using Cosmetics.DTO.Brand;
-using Cosmetics.DTO.Category;
 using Cosmetics.DTO.User;
-using Cosmetics.Interfaces;
 using Cosmetics.Models;
-using Microsoft.AspNetCore.Http;
+using Cosmetics.Repositories.UnitOfWork;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmetics.Controllers
@@ -13,12 +11,12 @@ namespace Cosmetics.Controllers
     [ApiController]
     public class BrandController : ControllerBase
     {
-        private readonly IBrand _brandRepo;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public BrandController(IBrand brandRepo, IMapper mapper)
+        public BrandController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _brandRepo = brandRepo;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
@@ -36,7 +34,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var brands = await _brandRepo.GetAllAsync();
+            var brands = await _unitOfWork.Brands.GetAllAsync();
             var brandDTO = _mapper.Map<List<BrandDTO>>(brands);
             return Ok(new ApiResponse
             {
@@ -59,10 +57,10 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var brand = await _brandRepo.GetByIdAsync(id);
+            var brand = await _unitOfWork.Brands.GetByIdAsync(id);
             if (brand == null)
             {
-                return Ok(new ApiResponse
+                return BadRequest(new ApiResponse
                 {
                     Success = false,
                     StatusCode = StatusCodes.Status404NotFound,
@@ -80,7 +78,7 @@ namespace Cosmetics.Controllers
 
         [HttpPost]
         [Route("CreateBrand")]
-        public async Task<IActionResult> Create([FromBody] CreateBrandDTO brandDTO)
+        public async Task<IActionResult> Create([FromBody] BrandCreateDTO brandDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -100,7 +98,18 @@ namespace Cosmetics.Controllers
                 CreatedAt = DateTime.Now,
             };
 
-            await _brandRepo.CreateAsync(brandModel);
+            if(await _unitOfWork.Brands.brandNameExist(brandModel.Name))
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "BrandName already exist!",
+                });
+            }
+
+            await _unitOfWork.Brands.AddAsync(brandModel);
+            await _unitOfWork.CompleteAsync();
+
             return Ok(new ApiResponse
             {
                 Success = true,
@@ -124,7 +133,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var hasProducts = await _brandRepo.BrandHasProducts(id);
+            var hasProducts = await _unitOfWork.Brands.brandHasProducts(id);
 
             if (hasProducts)
             {
@@ -136,17 +145,20 @@ namespace Cosmetics.Controllers
                 }); 
             }
 
-            var brand = await _brandRepo.DeleteByIdAsync(id);
+            var brand = await _unitOfWork.Brands.GetByIdAsync(id);
 
             if (brand == null)
             {
-                return Ok(new ApiResponse
+                return BadRequest(new ApiResponse
                 {
                     Success = false,
                     StatusCode = StatusCodes.Status404NotFound,
                     Message = "Brand does not exist!",
                 });
             }
+
+             _unitOfWork.Brands.Delete(brand);
+            await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse
             {
@@ -157,7 +169,7 @@ namespace Cosmetics.Controllers
 
         [HttpPut]
         [Route("UpdateBrandBy/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateBrandDTO brandDTO)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] BrandUpdateDTO brandDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -169,7 +181,8 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var update = await _brandRepo.UpdateAsync(id, brandDTO);
+            var update = await _unitOfWork.Brands.GetByIdAsync(id);
+
             if (update == null)
             {
                 return Ok(new ApiResponse
@@ -180,9 +193,25 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            update.Name = brandDTO.Name;
+            update.IsPremium = brandDTO.IsPremium;
+
+            if(await _unitOfWork.Brands.brandNameExist(update.Name))
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "BrandName already exist!"
+                });
+            }
+
+            _unitOfWork.Brands.Update(update);
+            await _unitOfWork.CompleteAsync();
+
             return Ok(new ApiResponse
             {
                 Success = true,
+                Message = "Brand updated successfully",
                 Data = _mapper.Map<BrandDTO>(update)
             });
         }

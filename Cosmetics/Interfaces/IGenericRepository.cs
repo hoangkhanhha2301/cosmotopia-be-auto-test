@@ -1,4 +1,6 @@
-﻿namespace Cosmetics.Interfaces
+﻿using System.Linq.Expressions;
+
+namespace Cosmetics.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
@@ -7,5 +9,12 @@
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
+        Task<IEnumerable<T>> GetAsync(
+            Expression<Func<T, bool>> filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            int? page = null,
+            int? pageSize = null,
+            params Expression<Func<T, object>>[] includes
+            );
     }
 }

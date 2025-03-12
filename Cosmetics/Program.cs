@@ -127,14 +127,15 @@ var cloudinary = new Cloudinary(cloudinaryAccount);
 builder.Services.AddSingleton(cloudinary);
 
 // Add Repositories and Interfaces
-builder.Services.AddScoped<IProduct, ProductRepository>();
-builder.Services.AddScoped<ICategory, CategoryRepository>();
-builder.Services.AddScoped<IBrand, BrandRepository>();
-builder.Services.AddHostedService<ExpiredOtpCleanerService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IBrandRepository, BrandRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+//Add Services
+builder.Services.AddHostedService<ExpiredOtpCleanerService>();
 
 
 
