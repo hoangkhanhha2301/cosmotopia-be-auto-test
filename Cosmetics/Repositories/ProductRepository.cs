@@ -1,6 +1,4 @@
-﻿using Cosmetics.DTO.Product;
-using Cosmetics.Helpers;
-using Cosmetics.Interfaces;
+﻿using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Microsoft.EntityFrameworkCore;
 

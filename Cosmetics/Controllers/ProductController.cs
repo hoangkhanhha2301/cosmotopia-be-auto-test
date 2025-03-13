@@ -138,7 +138,7 @@ namespace Cosmetics.Controllers
 
         [HttpPost]
         [Route("CreateProduct")]
-        public async Task<IActionResult> Create([FromForm] ProductCreateDTO productDTO, List<IFormFile> imageFiles)
+        public async Task<IActionResult> Create([FromForm] ProductCreateDTO productDTO, IFormFile[] imageFiles)
         {
             if(!ModelState.IsValid)
             {
@@ -171,7 +171,7 @@ namespace Cosmetics.Controllers
             }
 
             var imageUrls = new List<string>();
-            if(imageFiles != null && imageFiles.Count > 0)
+            if(imageFiles != null && imageFiles.Length > 0)
             {
                 foreach(var imageFile in imageFiles) 
                 { 
@@ -191,7 +191,7 @@ namespace Cosmetics.Controllers
                 Description = productDTO.Description,
                 Price = productDTO.Price,
                 StockQuantity = productDTO.StockQuantity,
-                ImageUrls = string.Join(", ", imageUrls),
+                ImageUrls = imageUrls.ToArray(),
                 CommissionRate = productDTO.CommissionRate,
                 CategoryId = productDTO.CategoryId,
                 BrandId = productDTO.BrandId,
@@ -213,7 +213,7 @@ namespace Cosmetics.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] ProductUpdateDTO productDTO, List<IFormFile> imageFiles)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] ProductUpdateDTO productDTO, IFormFile[] imageFiles)
         {
             if(!ModelState.IsValid)
             {
@@ -237,13 +237,12 @@ namespace Cosmetics.Controllers
             }
 
             var imageUrls = new List<string>();
-            if(imageFiles != null && imageFiles.Count > 0) 
+            if(imageFiles != null && imageFiles.Length > 0) 
             { 
                 //Delete old image on Cloudinary
-                if (!string.IsNullOrEmpty(existingProduct.ImageUrls))
+                if (existingProduct.ImageUrls != null && existingProduct.ImageUrls.Length > 0)
                 {
-                    var oldImageUrls = existingProduct.ImageUrls.Split(",");
-                    foreach(var imageUrl in oldImageUrls)
+                    foreach(var imageUrl in existingProduct.ImageUrls)
                     {
                         var publicId = imageUrl.Split("/").Last().Split(".").First();
                         var deletionParams = new DeletionParams(publicId);
@@ -252,8 +251,7 @@ namespace Cosmetics.Controllers
                 }
 
                 //Upload image on Cloudinary
-                if(imageFiles != null && imageFiles.Count > 0)
-                {
+                
                     foreach(var imageFile in imageFiles)
                     {
                         var uploadParams = new ImageUploadParams()
@@ -264,9 +262,8 @@ namespace Cosmetics.Controllers
                         var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                         imageUrls.Add(uploadResult.SecureUrl.ToString());
                     }
-                }
 
-                productDTO.ImageUrls = string.Join(", ", imageUrls);
+                productDTO.ImageUrls = imageUrls.ToArray();
             } else
             {
                 productDTO.ImageUrls = existingProduct?.ImageUrls;
