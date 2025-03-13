@@ -18,7 +18,7 @@ namespace Cosmetics.DTO.Product
 
         public int? StockQuantity { get; set; }
 
-        public string ImageUrls { get; set; }
+        public string[] ImageUrls { get; set; }
 
         public decimal? CommissionRate { get; set; }
         public Guid? CategoryId { get; set; }

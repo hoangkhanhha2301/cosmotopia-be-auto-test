@@ -13,7 +13,7 @@ namespace Cosmetics.DTO.Product
         public int? StockQuantity { get; set; }
 
         [SwaggerSchema(ReadOnly = true)]
-        public string? ImageUrls { get; set; }
+        public string[]? ImageUrls { get; set; }
 
         public decimal? CommissionRate { get; set; }
 
