@@ -390,7 +390,42 @@ namespace ComedicShopAPI.Controllers
                 Data = userDtoList
             });
         }
+        // GetById
+        //
+        [HttpGet("GetUserById/{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            if (!IsAdmin(User))
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Unauthorized"
+                });
+            }
 
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
+
+            // Map the user to UserAdminDTO
+            var userDto = _mapper.Map<UserAdminDTO>(user);
+
+            // Convert the RoleType from int to string
+            userDto.RoleType = GetUserRole(user.RoleType);
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Data = userDto
+            });
+        }
 
         //Edit Account (User)
         [HttpPut("EditSelf")]
@@ -460,9 +495,9 @@ namespace ComedicShopAPI.Controllers
         }
 
 
-        [HttpPut("EditUserStatus")]
+        [HttpPut("EditUserStatusAndRole/{id}")]
         [Authorize]
-        public async Task<IActionResult> EditUserStatus(EditUserStatusModel model)
+        public async Task<IActionResult> EditUserStatusAndRole(int id, EditUserStatusAndRoleModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -473,7 +508,7 @@ namespace ComedicShopAPI.Controllers
                 });
             }
 
-            // Check if the user is an admin
+            // Kiểm tra quyền Admin
             if (!IsAdmin(User))
             {
                 return Unauthorized(new ApiResponse
@@ -483,17 +518,8 @@ namespace ComedicShopAPI.Controllers
                 });
             }
 
-            // Check if UserStatus is within the valid range
-            if (model.UserStatus < 0 || model.UserStatus > 1)
-            {
-                return BadRequest(new ApiResponse
-                {
-                    Success = false,
-                    Message = "Invalid UserStatus"
-                });
-            }
-
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            // Tìm người dùng theo ID
+            var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound(new ApiResponse
@@ -503,7 +529,42 @@ namespace ComedicShopAPI.Controllers
                 });
             }
 
-            user.UserStatus = model.UserStatus;
+            // Cập nhật UserStatus nếu có
+            if (model.UserStatus.HasValue)
+            {
+                if (model.UserStatus < 0 || model.UserStatus > 1)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Invalid UserStatus"
+                    });
+                }
+                user.UserStatus = model.UserStatus.Value;
+            }
+
+            // Cập nhật RoleType nếu có
+            if (model.RoleType.HasValue)
+            {
+                if (model.RoleType < 0 || model.RoleType > 5)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Invalid RoleType"
+                    });
+                }
+                var roleName = GetUserRole(model.RoleType.Value);
+                if (string.IsNullOrEmpty(roleName))
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Invalid RoleType"
+                    });
+                }
+                user.RoleType = model.RoleType.Value;
+            }
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
@@ -511,75 +572,10 @@ namespace ComedicShopAPI.Controllers
             return Ok(new ApiResponse
             {
                 Success = true,
-                Message = "User status updated successfully"
+                Message = "User status and role updated successfully"
             });
         }
 
-        [HttpPut("EditRole")]
-        [Authorize]
-        public async Task<IActionResult> EditRole(EditRoleModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiResponse
-                {
-                    Success = false,
-                    Message = "Invalid data"
-                });
-            }
-
-            // Check if the user is an admin
-            if (!IsAdmin(User))
-            {
-                return Unauthorized(new ApiResponse
-                {
-                    Success = false,
-                    Message = "Access denied. Admins only."
-                });
-            }
-
-            // Check if RoleType is within the valid range
-            if (model.RoleType < 0 || model.RoleType > 3)
-            {
-                return BadRequest(new ApiResponse
-                {
-                    Success = false,
-                    Message = "Invalid role type"
-                });
-            }
-
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
-            if (user == null)
-            {
-                return NotFound(new ApiResponse
-                {
-                    Success = false,
-                    Message = "User not found"
-                });
-            }
-
-            // Get the role name from roleType
-            var roleName = GetUserRole(model.RoleType);
-            if (string.IsNullOrEmpty(roleName))
-            {
-                return BadRequest(new ApiResponse
-                {
-                    Success = false,
-                    Message = "Invalid role type"
-                });
-            }
-
-            user.RoleType = model.RoleType;
-
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
-
-            return Ok(new ApiResponse
-            {
-                Success = true,
-                Message = "User role updated successfully"
-            });
-        }
 
         private string GenerateToken(User user)
         {
@@ -625,6 +621,8 @@ namespace ComedicShopAPI.Controllers
                     return "Customers";
                 case 4:
                     return "Sales Staff";
+                case 5:
+                    return "Shipper Staff";
 
                 default:
 
