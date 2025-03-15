@@ -682,6 +682,56 @@ namespace ComedicShopAPI.Controllers
             }
         }
 
+        [HttpPost("newPass")]
+        public async Task<IActionResult> ResetPassword(SetNewPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data",
+                    Data = ModelState
+                });
+            }
+
+            if (model.NewPassword != model.ConfirmPassword)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Password and confirm password do not match"
+                });
+            }
+
+            var user = await _context.Users
+                .Where(u => u.TokenExpiry > DateTime.UtcNow)
+                .ToListAsync();
+
+            var matchedUser = user.SingleOrDefault(u => BCrypt.Net.BCrypt.Verify(model.Token, u.RefreshToken));
+
+            if (matchedUser == null)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid or expired token"
+                });
+            }
+
+            matchedUser.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            matchedUser.RefreshToken = null;
+            matchedUser.TokenExpiry = null;
+
+            _context.Users.Update(matchedUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Password has been reset successfully"
+            });
+        }
 
         private string GenerateToken(User user)
         {
