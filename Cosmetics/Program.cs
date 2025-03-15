@@ -105,7 +105,8 @@ builder.Services.AddScoped<IEmailService, EmailService>(sp => new EmailService(
     smtpServer: "smtp.gmail.com",
     smtpPort: 587,
     smtpEmail: "courtb454@gmail.com",
-    smtpPassword: "uoxy luwg yczg lxse"
+    smtpPassword: "riqc mncz rljd wjrv",
+    logger: sp.GetRequiredService<ILogger<EmailService>>()
 ));
 
 
