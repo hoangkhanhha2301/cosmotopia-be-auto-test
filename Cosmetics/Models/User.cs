@@ -25,8 +25,6 @@ public partial class User
 
     public string Password { get; set; }
 
-    public int RoleType { get; set; }
-
     public string Otp { get; set; }
 
     public DateTime? OtpExpiration { get; set; }
@@ -35,7 +33,7 @@ public partial class User
 
     public int? UserStatus { get; set; }
 
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public int RoleType { get; set; }
 
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

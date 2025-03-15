@@ -12,6 +12,13 @@ namespace Cosmetics.Repositories
         {
             return await _dbSet.Where(o => o.CustomerId == customerId).ToListAsync();
         }
+        public async Task<Order?> GetByIdAsync(Guid id)
+        {
+            return await _dbSet
+                .Include(o => o.Customer) // Include Customer data
+                .Include(o => o.OrderDetails) // Include OrderDetails if needed
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+        }
     }
 
 }
