@@ -43,23 +43,7 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Permissions]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Products]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[RolePermissions]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Roles]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[UserRoles]",
          "ObjectType": 0
       },
       {
