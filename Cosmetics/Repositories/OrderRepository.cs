@@ -10,7 +10,11 @@ namespace Cosmetics.Repositories
 
         public async Task<IEnumerable<Order>> GetOrdersByCustomerIdAsync(int customerId)
         {
-            return await _dbSet.Where(o => o.CustomerId == customerId).ToListAsync();
+            return await _dbSet
+                .Where(o => o.CustomerId == customerId)
+                .Include(o => o.OrderDetails) // Include order details if needed
+                .Include(o => o.Customer)     // Include customer info if needed
+                .ToListAsync();
         }
         public async Task<Order?> GetByIdAsync(Guid id)
         {
