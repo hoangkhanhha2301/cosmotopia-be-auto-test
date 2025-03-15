@@ -19,6 +19,8 @@ using AutoMapper;
 using Microsoft.Extensions.Options;
 using Cosmetics.Service.OTP;
 
+using Cosmetics.DTO.User.Admin;
+
 namespace ComedicShopAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -300,18 +302,18 @@ namespace ComedicShopAPI.Controllers
             }
 
             
-            const int AffiliateRole = 5; // 
+            const int AffiliateRole = 2; 
             if (user.RoleType == AffiliateRole)
             {
                 return BadRequest(new ApiResponse { Success = false, Message = "You are already an Affiliate" });
             }
 
-            // Cập nhật quyền hạn thành Affiliate
+    
             user.RoleType = AffiliateRole;
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            // Tạo token mới phản ánh role Affiliate
+   
             var newToken = GenerateToken(user);
 
             return Ok(new ApiResponse
@@ -322,8 +324,262 @@ namespace ComedicShopAPI.Controllers
             });
         }
 
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data",
+                    Data = ModelState
+                });
+            }
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null || !BCrypt.Net.BCrypt.Verify(model.OldPassword, user.Password))//Hash pass
+            {
+                return Ok(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid Email or Old Password. Please again"
+                });
+            }
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Password changed successfully"
+            });
+        }
+
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            if (!IsAdmin(User))
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Unauthorized"
+                });
+            }
+
+            var users = await _context.Users.ToListAsync();
+
+            // Map each user to UserAdminDTO
+            var userDtoList = new List<UserAdminDTO>();
+            foreach (var user in users)
+            {
+                var userDto = _mapper.Map<UserAdminDTO>(user);
+
+                // Convert RoleType from int to string (assuming GetUserRole is a method you have elsewhere)
+                userDto.RoleType = GetUserRole(user.RoleType);
+
+                userDtoList.Add(userDto);
+            }
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Data = userDtoList
+            });
+        }
 
 
+        //Edit Account (User)
+        [HttpPut("EditSelf")]
+        [Authorize]
+        public async Task<IActionResult> EditSelf(EditSelfModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data"
+                });
+            }
+
+            // Get the ID of the user making the request
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User ID claim not found"
+                });
+            }
+
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid user ID"
+                });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
+            var existingUserByPhone = await _context.Users.SingleOrDefaultAsync(u => u.Phone == model.Phone && u.UserId != userId);
+            if (existingUserByPhone != null)
+            {
+                return Ok(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Phone number already exists"
+                });
+            }
+
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Phone = model.Phone;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "User updated successfully"
+            });
+        }
+
+
+        [HttpPut("EditUserStatus")]
+        [Authorize]
+        public async Task<IActionResult> EditUserStatus(EditUserStatusModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data"
+                });
+            }
+
+            // Check if the user is an admin
+            if (!IsAdmin(User))
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Access denied. Admins only."
+                });
+            }
+
+            // Check if UserStatus is within the valid range
+            if (model.UserStatus < 0 || model.UserStatus > 1)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid UserStatus"
+                });
+            }
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
+
+            user.UserStatus = model.UserStatus;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "User status updated successfully"
+            });
+        }
+
+        [HttpPut("EditRole")]
+        [Authorize]
+        public async Task<IActionResult> EditRole(EditRoleModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data"
+                });
+            }
+
+            // Check if the user is an admin
+            if (!IsAdmin(User))
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Access denied. Admins only."
+                });
+            }
+
+            // Check if RoleType is within the valid range
+            if (model.RoleType < 0 || model.RoleType > 3)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid role type"
+                });
+            }
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
+
+            // Get the role name from roleType
+            var roleName = GetUserRole(model.RoleType);
+            if (string.IsNullOrEmpty(roleName))
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid role type"
+                });
+            }
+
+            user.RoleType = model.RoleType;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "User role updated successfully"
+            });
+        }
 
         private string GenerateToken(User user)
         {
@@ -351,7 +607,10 @@ namespace ComedicShopAPI.Controllers
 
         }
 
-
+        private bool IsAdmin(ClaimsPrincipal user)
+        {
+            return user.Claims.Any(c => c.Type == ClaimTypes.Role && (c.Value == "Administrator"));
+        }
         private string GetUserRole(int roleType)
         {
             switch (roleType)
@@ -366,8 +625,7 @@ namespace ComedicShopAPI.Controllers
                     return "Customers";
                 case 4:
                     return "Sales Staff";
-                case 5:
-                    return "Affiliate";
+
                 default:
 
                     return null;
