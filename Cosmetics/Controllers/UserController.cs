@@ -634,6 +634,55 @@ namespace ComedicShopAPI.Controllers
         }
 
 
+         [HttpPost("forgotpassword")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid data",
+                    Data = ModelState
+                });
+            }
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
+            {
+                return Ok(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid Email"
+                });
+            }
+
+            // Generate password reset token
+            var token = Guid.NewGuid().ToString();
+            user.RefreshToken = BCrypt.Net.BCrypt.HashPassword(token);
+            user.TokenExpiry = DateTime.UtcNow.AddHours(1);
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            var resetLink = $"http://localhost:3000/newPass?token={token}";
+
+            try
+            {
+                await _emailService.SendEmailAsync(user.Email, "Reset Password", $"Click the link to reset your password: {resetLink}");
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Password reset link has been sent to your email."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse { Success = false, Message = $"An error occurred: {ex.Message}" });
+            }
+        }
+
+
         private string GenerateToken(User user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
