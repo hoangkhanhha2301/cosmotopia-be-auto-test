@@ -379,7 +379,7 @@ namespace ComedicShopAPI.Controllers
                 var userDto = _mapper.Map<UserAdminDTO>(user);
 
                 // Convert RoleType from int to string (assuming GetUserRole is a method you have elsewhere)
-                userDto.RoleType = GetUserRole(user.RoleType);
+                userDto.RoleType = user.RoleType;
 
                 userDtoList.Add(userDto);
             }
@@ -418,7 +418,7 @@ namespace ComedicShopAPI.Controllers
             var userDto = _mapper.Map<UserAdminDTO>(user);
 
             // Convert the RoleType from int to string
-            userDto.RoleType = GetUserRole(user.RoleType);
+            userDto.RoleType = user.RoleType;
 
             return Ok(new ApiResponse
             {
