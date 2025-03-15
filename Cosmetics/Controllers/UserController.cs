@@ -427,6 +427,63 @@ namespace ComedicShopAPI.Controllers
             });
         }
 
+
+
+        [HttpGet("GetCurrentUser")]
+        [Authorize]
+        //User and Admin
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            // Log claims for debugging
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+
+            // Get the user ID from the claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User ID claim not found"
+                });
+            }
+
+            // Parse the user ID
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invalid user ID"
+                });
+            }
+
+            // Retrieve the user from the database
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                });
+            }
+
+            // Map the user to a DTO
+            var userDTO = _mapper.Map<UserDTO>(user);
+
+            // Return the user details
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "User found",
+                Data = userDTO
+            });
+        }
+
         //Edit Account (User)
         [HttpPut("EditSelf")]
         [Authorize]
