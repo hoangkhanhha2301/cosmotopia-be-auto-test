@@ -5,6 +5,7 @@ using Cosmetics.DTO.Order;
 using Cosmetics.DTO.OrderDetail;
 using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
+using Cosmetics.DTO.User.Admin;
 using Cosmetics.Models;
 
 namespace Cosmetics.Mapping
@@ -14,6 +15,7 @@ namespace Cosmetics.Mapping
         public MappingProfile()
         {
             CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<User, UserAdminDTO>().ReverseMap();
             //Product
             CreateMap<Product, ProductDTO>().ReverseMap();  
             CreateMap<Product, ProductCreateDTO>().ReverseMap();
