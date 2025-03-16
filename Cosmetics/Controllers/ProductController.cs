@@ -138,7 +138,7 @@ namespace Cosmetics.Controllers
 
         [HttpPost]
         [Route("CreateProduct")]
-        public async Task<IActionResult> Create([FromForm] ProductCreateDTO productDTO, IFormFile[] imageFiles)
+        public async Task<IActionResult> Create(ProductCreateDTO productDTO)
         {
             if(!ModelState.IsValid)
             {
@@ -171,18 +171,9 @@ namespace Cosmetics.Controllers
             }
 
             var imageUrls = new List<string>();
-            if(imageFiles != null && imageFiles.Length > 0)
-            {
-                foreach(var imageFile in imageFiles) 
-                { 
-                    var uploadParams = new ImageUploadParams()
-                    {
-                        File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream())
-                    };
-                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                    imageUrls.Add(uploadResult.SecureUrl.ToString());
-                }
-            }
+
+
+
 
             var productModel = new Product
             {
@@ -191,7 +182,7 @@ namespace Cosmetics.Controllers
                 Description = productDTO.Description,
                 Price = productDTO.Price,
                 StockQuantity = productDTO.StockQuantity,
-                ImageUrls = imageUrls.ToArray(),
+                ImageUrls = productDTO.imageUrls.ToArray(),
                 CommissionRate = productDTO.CommissionRate,
                 CategoryId = productDTO.CategoryId,
                 BrandId = productDTO.BrandId,
@@ -213,7 +204,7 @@ namespace Cosmetics.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] ProductUpdateDTO productDTO, IFormFile[] imageFiles)
+        public async Task<IActionResult> Update([FromRoute] Guid id, ProductUpdateDTO productDTO)
         {
             if(!ModelState.IsValid)
             {
@@ -236,44 +227,14 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var imageUrls = new List<string>();
-            if(imageFiles != null && imageFiles.Length > 0) 
-            { 
-                //Delete old image on Cloudinary
-                if (existingProduct.ImageUrls != null && existingProduct.ImageUrls.Length > 0)
-                {
-                    foreach(var imageUrl in existingProduct.ImageUrls)
-                    {
-                        var publicId = imageUrl.Split("/").Last().Split(".").First();
-                        var deletionParams = new DeletionParams(publicId);
-                        await _cloudinary.DestroyAsync(deletionParams);
-                    }
-                }
-
-                //Upload image on Cloudinary
-                
-                    foreach(var imageFile in imageFiles)
-                    {
-                        var uploadParams = new ImageUploadParams()
-                        {
-                            File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream())
-                        };
-
-                        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                        imageUrls.Add(uploadResult.SecureUrl.ToString());
-                    }
-
-                productDTO.ImageUrls = imageUrls.ToArray();
-            } else
-            {
-                productDTO.ImageUrls = existingProduct?.ImageUrls;
-            }
+        
+       
 
             existingProduct.Name = productDTO.Name;
             existingProduct.Description = productDTO.Description;
             existingProduct.Price = productDTO.Price;
             existingProduct.StockQuantity = productDTO.StockQuantity;
-            existingProduct.ImageUrls = productDTO.ImageUrls;
+            existingProduct.ImageUrls = productDTO.ImageUrls.ToArray();
             existingProduct.CommissionRate = productDTO.CommissionRate;
             existingProduct.IsActive = productDTO.IsActive;
 
