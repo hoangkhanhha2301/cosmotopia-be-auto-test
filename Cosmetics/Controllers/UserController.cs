@@ -165,58 +165,81 @@ namespace ComedicShopAPI.Controllers
                 return StatusCode(500, new ApiResponse { Success = false, Message = $"An unexpected error occurred: {ex.Message}" });
             }
         }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> RegisterAffiliate([FromBody] RegisterAffiliateDto dto)
+        [HttpPost("verifyotp")]
+        public async Task<IActionResult> VerifyOtp(VerifyOtpModel model)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleTypeClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-
-            Console.WriteLine($"UserIdClaim: {userIdClaim}, RoleTypeClaim: {roleTypeClaim}");
-
-            if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleTypeClaim))
+            if (!ModelState.IsValid)
             {
-                return Unauthorized("User ID or RoleType not found in token.");
+                return BadRequest(new ApiResponse { Success = false, Message = "Invalid data", Data = ModelState });
             }
 
-            // Chuyển "Customers" thành "3" nếu cần
-            if (roleTypeClaim == "Customers")
+            var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
             {
-                roleTypeClaim = "3";
+                return Ok(new ApiResponse { Success = false, Message = "Invalid Email/OTP" });
             }
 
-            if (!int.TryParse(userIdClaim, out var userId))
+            if (BCrypt.Net.BCrypt.Verify(model.Otp, user.Otp) && user.OtpExpiration > DateTime.UtcNow)
             {
-                return BadRequest($"Invalid User ID format: {userIdClaim}");
+                user.Verify = 4;
+                _unitOfWork.Users.Update(user);
+                await _unitOfWork.CompleteAsync();
+                return Ok(new ApiResponse { Success = true, Message = "OTP verified successfully" });
             }
 
-            if (!int.TryParse(roleTypeClaim, out var roleType))
-            {
-                return BadRequest($"Invalid Role Type format: {roleTypeClaim}");
-            }
-
-            if (roleType != 3)
-            {
-                return BadRequest("Only customers (RoleType = 3) can register as affiliates.");
-            }
-
-            var referralCode = Guid.NewGuid().ToString("N").Substring(0, 8);
-            var affiliateProfile = new AffiliateProfile
-            {
-                AffiliateProfileId = Guid.NewGuid(),
-                UserId = userId,
-                BankName = dto.BankName,
-                BankAccountNumber = dto.BankAccountNumber,
-                BankBranch = dto.BankBranch,
-                ReferralCode = referralCode,
-                CreatedAt = DateTime.Now
-            };
-
-            await _affiliateService.RegisterAffiliate(affiliateProfile);
-            await _affiliateService.UpdateUserRole(userId, 2); // Chuyển RoleType từ 3 -> 2
-
-            return Ok(new { Message = "Successfully registered as an affiliate!", ReferralCode = referralCode });
+            return Ok(new ApiResponse { Success = false, Message = "Invalid OTP or OTP has expired" });
         }
+        [HttpPost("register-to-become-affiliate")]
+public async Task<IActionResult> RegisterAffiliate([FromBody] RegisterAffiliateDto dto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var roleTypeClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+
+    Console.WriteLine($"UserIdClaim: {userIdClaim}, RoleTypeClaim: {roleTypeClaim}");
+
+    if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleTypeClaim))
+    {
+        return Unauthorized("User ID or RoleType not found in token.");
+    }
+
+    // Chuyển "Customers" thành "3" nếu cần
+    if (roleTypeClaim == "Customers")
+    {
+        roleTypeClaim = "3";
+    }
+
+    if (!int.TryParse(userIdClaim, out var userId))
+    {
+        return BadRequest($"Invalid User ID format: {userIdClaim}");
+    }
+
+    if (!int.TryParse(roleTypeClaim, out var roleType))
+    {
+        return BadRequest($"Invalid Role Type format: {roleTypeClaim}");
+    }
+
+    if (roleType != 3)
+    {
+        return BadRequest("Only customers (RoleType = 3) can register as affiliates.");
+    }
+
+    var referralCode = Guid.NewGuid().ToString("N").Substring(0, 8);
+    var affiliateProfile = new AffiliateProfile
+    {
+        AffiliateProfileId = Guid.NewGuid(),
+        UserId = userId,
+        BankName = dto.BankName,
+        BankAccountNumber = dto.BankAccountNumber,
+        BankBranch = dto.BankBranch,
+        ReferralCode = referralCode,
+        CreatedAt = DateTime.Now
+    };
+
+    await _affiliateService.RegisterAffiliate(affiliateProfile);
+    await _affiliateService.UpdateUserRole(userId, 2); // Chuyển RoleType từ 3 -> 2
+
+    return Ok(new { Message = "Successfully registered as an affiliate!", ReferralCode = referralCode });
+}
 
 
 
