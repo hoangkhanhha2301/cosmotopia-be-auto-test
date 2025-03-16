@@ -14,6 +14,8 @@ using AutoMapper;
 using Cosmetics.Service.OTP;
 using Cosmetics.DTO.User.Admin;
 using Cosmetics.Repositories.UnitOfWork;
+using Cosmetics.DTO.Affiliate;
+using Cosmetics.Service.Affiliate;
 
 namespace ComedicShopAPI.Controllers
 {
@@ -25,13 +27,16 @@ namespace ComedicShopAPI.Controllers
         private readonly AppSetting _appSettings;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
+        private readonly IAffiliateService _affiliateService;
 
-        public UserController(IUnitOfWork unitOfWork, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService)
+
+        public UserController(IUnitOfWork unitOfWork, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService, IAffiliateService affiliateService)
         {
             _unitOfWork = unitOfWork;
             _appSettings = optionsMonitor.CurrentValue;
             _mapper = mapper;
             _emailService = emailService;
+            _affiliateService = affiliateService;
         }
 
         [HttpPost("Login")]
@@ -161,64 +166,59 @@ namespace ComedicShopAPI.Controllers
             }
         }
 
-        [HttpPost("verifyotp")]
-        public async Task<IActionResult> VerifyOtp(VerifyOtpModel model)
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterAffiliate([FromBody] RegisterAffiliateDto dto)
         {
-            if (!ModelState.IsValid)
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roleTypeClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            Console.WriteLine($"UserIdClaim: {userIdClaim}, RoleTypeClaim: {roleTypeClaim}");
+
+            if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleTypeClaim))
             {
-                return BadRequest(new ApiResponse { Success = false, Message = "Invalid data", Data = ModelState });
+                return Unauthorized("User ID or RoleType not found in token.");
             }
 
-            var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-            if (user == null)
+            // Chuyển "Customers" thành "3" nếu cần
+            if (roleTypeClaim == "Customers")
             {
-                return Ok(new ApiResponse { Success = false, Message = "Invalid Email/OTP" });
+                roleTypeClaim = "3";
             }
 
-            if (BCrypt.Net.BCrypt.Verify(model.Otp, user.Otp) && user.OtpExpiration > DateTime.UtcNow)
+            if (!int.TryParse(userIdClaim, out var userId))
             {
-                user.Verify = 4;
-                _unitOfWork.Users.Update(user);
-                await _unitOfWork.CompleteAsync();
-                return Ok(new ApiResponse { Success = true, Message = "OTP verified successfully" });
+                return BadRequest($"Invalid User ID format: {userIdClaim}");
             }
 
-            return Ok(new ApiResponse { Success = false, Message = "Invalid OTP or OTP has expired" });
+            if (!int.TryParse(roleTypeClaim, out var roleType))
+            {
+                return BadRequest($"Invalid Role Type format: {roleTypeClaim}");
+            }
+
+            if (roleType != 3)
+            {
+                return BadRequest("Only customers (RoleType = 3) can register as affiliates.");
+            }
+
+            var referralCode = Guid.NewGuid().ToString("N").Substring(0, 8);
+            var affiliateProfile = new AffiliateProfile
+            {
+                AffiliateProfileId = Guid.NewGuid(),
+                UserId = userId,
+                BankName = dto.BankName,
+                BankAccountNumber = dto.BankAccountNumber,
+                BankBranch = dto.BankBranch,
+                ReferralCode = referralCode,
+                CreatedAt = DateTime.Now
+            };
+
+            await _affiliateService.RegisterAffiliate(affiliateProfile);
+            await _affiliateService.UpdateUserRole(userId, 2); // Chuyển RoleType từ 3 -> 2
+
+            return Ok(new { Message = "Successfully registered as an affiliate!", ReferralCode = referralCode });
         }
 
-        [HttpPost("become-affiliate")]
-        public async Task<IActionResult> BecomeAffiliate()
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userId, out int parsedUserId))
-            {
-                return Unauthorized(new ApiResponse { Success = false, Message = "User not authenticated" });
-            }
 
-            var user = await _unitOfWork.Users.GetByIdAsync(parsedUserId);
-            if (user == null)
-            {
-                return NotFound(new ApiResponse { Success = false, Message = "User not found" });
-            }
-
-            const int AffiliateRole = 2;
-            if (user.RoleType == AffiliateRole)
-            {
-                return BadRequest(new ApiResponse { Success = false, Message = "You are already an Affiliate" });
-            }
-
-            user.RoleType = AffiliateRole;
-            _unitOfWork.Users.Update(user);
-            await _unitOfWork.CompleteAsync();
-
-            var newToken = GenerateToken(user);
-            return Ok(new ApiResponse
-            {
-                Success = true,
-                Message = "Successfully registered as an Affiliate",
-                Data = new { UserId = user.UserId, Role = GetUserRole(user.RoleType), Token = newToken }
-            });
-        }
 
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword(ChangePasswordModel model)

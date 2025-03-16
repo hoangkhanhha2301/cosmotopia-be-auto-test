@@ -35,7 +35,7 @@ public partial class User
 
     public int RoleType { get; set; }
 
-    public virtual ICollection<AffiliateProfile> AffiliateProfiles { get; set; } = new List<AffiliateProfile>();
+    public virtual AffiliateProfile AffiliateProfile { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

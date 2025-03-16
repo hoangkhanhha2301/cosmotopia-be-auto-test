@@ -31,11 +31,13 @@ public partial class Product
 
     public bool? IsActive { get; set; }
 
-    public virtual ICollection<AffiliateLink> AffiliateLinks { get; set; } = new List<AffiliateLink>();
+    public virtual ICollection<AffiliateProductLink> AffiliateProductLinks { get; set; } = new List<AffiliateProductLink>();
 
     public virtual Brand Brand { get; set; }
 
     public virtual Category Category { get; set; }
+
+    public virtual ICollection<ClickTracking> ClickTrackings { get; set; } = new List<ClickTracking>();
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 }

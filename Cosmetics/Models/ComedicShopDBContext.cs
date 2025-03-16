@@ -14,15 +14,17 @@ public partial class ComedicShopDBContext : DbContext
     {
     }
 
-    public virtual DbSet<AffiliateLink> AffiliateLinks { get; set; }
+    public virtual DbSet<AffiliateCommission> AffiliateCommissions { get; set; }
 
-    public virtual DbSet<AffiliatePayment> AffiliatePayments { get; set; }
+    public virtual DbSet<AffiliateProductLink> AffiliateProductLinks { get; set; }
 
     public virtual DbSet<AffiliateProfile> AffiliateProfiles { get; set; }
 
     public virtual DbSet<Brand> Brands { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }
+
+    public virtual DbSet<ClickTracking> ClickTrackings { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
 
@@ -34,84 +36,95 @@ public partial class ComedicShopDBContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AffiliateLink>(entity =>
+        modelBuilder.Entity<AffiliateCommission>(entity =>
         {
-            entity.HasKey(e => e.AffiliateLinkId).HasName("PK__Affiliat__0DFFE77FBC635541");
+            entity.HasKey(e => e.CommissionId).HasName("PK__Affiliat__6C2C8CEC6462BF7F");
 
-            entity.Property(e => e.AffiliateLinkId).ValueGeneratedNever();
-            entity.Property(e => e.Clicks).HasDefaultValue(0);
-            entity.Property(e => e.CreateAt)
+            entity.Property(e => e.CommissionId).HasColumnName("CommissionID");
+            entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EarnedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.EarnedCommission)
-                .HasDefaultValue(0m)
-                .HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.UniqueCode)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.IsPaid).HasDefaultValue(false);
+            entity.Property(e => e.OrderDetailId).HasColumnName("OrderDetailID");
 
-            entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.AffiliateLinks)
+            entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.AffiliateCommissions)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__Affiliate__Affil__5DCAEF64");
+                .HasConstraintName("FK__Affiliate__Affil__6EF57B66");
 
-            entity.HasOne(d => d.Product).WithMany(p => p.AffiliateLinks)
-                .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("FK__Affiliate__Produ__5EBF139D");
+            entity.HasOne(d => d.OrderDetail).WithMany(p => p.AffiliateCommissions)
+                .HasForeignKey(d => d.OrderDetailId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Affiliate__Order__6E01572D");
         });
 
-        modelBuilder.Entity<AffiliatePayment>(entity =>
+        modelBuilder.Entity<AffiliateProductLink>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Affiliat__9B556A386F85F80B");
+            entity.HasKey(e => e.LinkId).HasName("PK__Affiliat__2D1221555FDC74A6");
 
-            entity.Property(e => e.PaymentId).ValueGeneratedNever();
-            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.PaymentDate)
+            entity.HasIndex(e => e.ReferralCode, "UQ__Affiliat__7E067812E3885CD1").IsUnique();
+
+            entity.Property(e => e.LinkId).HasColumnName("LinkID");
+            entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.Status)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.TransactionId)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.ReferralCode)
+                .IsRequired()
+                .HasMaxLength(50);
 
-            entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.AffiliatePayments)
+            entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.AffiliateProductLinks)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__Affiliate__Affil__628FA481");
+                .HasConstraintName("FK__Affiliate__Affil__6383C8BA");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.AffiliateProductLinks)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("FK__Affiliate__Produ__6477ECF3");
         });
 
         modelBuilder.Entity<AffiliateProfile>(entity =>
         {
-            entity.HasKey(e => e.AffiliateProfileId).HasName("PK__Affiliat__E898D6673F2FA370");
+            entity.HasKey(e => e.AffiliateProfileId).HasName("PK__Affiliat__E898D6671B39B1CD");
 
-            entity.Property(e => e.AffiliateProfileId).ValueGeneratedNever();
-            entity.Property(e => e.ApplicationStatus)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.BankAccount)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.HasIndex(e => e.UserId, "UQ__Affiliat__1788CCAD26F743C8").IsUnique();
+
+            entity.HasIndex(e => e.ReferralCode, "UQ__Affiliat__7E067812ED305E9E").IsUnique();
+
+            entity.Property(e => e.AffiliateProfileId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.BankAccountNumber)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.BankBranch).HasMaxLength(100);
             entity.Property(e => e.BankName)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.CreateAt)
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.PaymentMethod)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.PendingAmount)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ReferralCode)
+                .IsRequired()
+                .HasMaxLength(50);
             entity.Property(e => e.TotalEarnings)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.WithdrawnAmount)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.User).WithOne(p => p.AffiliateProfile)
+                .HasForeignKey<AffiliateProfile>(d => d.UserId)
+                .HasConstraintName("FK__Affiliate__UserI__534D60F1");
         });
 
         modelBuilder.Entity<Brand>(entity =>
         {
-            entity.HasKey(e => e.BrandId).HasName("PK__Brands__DAD4F05E126C7D9A");
+            entity.HasKey(e => e.BrandId).HasName("PK__Brands__DAD4F05E52D5A8E1");
 
-            entity.Property(e => e.BrandId).ValueGeneratedNever();
+            entity.Property(e => e.BrandId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -124,9 +137,9 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B445A085F");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B777DB4AC");
 
-            entity.Property(e => e.CategoryId).ValueGeneratedNever();
+            entity.Property(e => e.CategoryId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -137,9 +150,33 @@ public partial class ComedicShopDBContext : DbContext
                 .IsUnicode(false);
         });
 
+        modelBuilder.Entity<ClickTracking>(entity =>
+        {
+            entity.HasKey(e => e.ClickId).HasName("PK__ClickTra__F8E74E2E0E141C45");
+
+            entity.ToTable("ClickTracking");
+
+            entity.Property(e => e.ClickId).HasColumnName("ClickID");
+            entity.Property(e => e.ClickedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.ReferralCode)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.ClickTrackings)
+                .HasForeignKey(d => d.AffiliateProfileId)
+                .HasConstraintName("FK__ClickTrac__Affil__68487DD7");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.ClickTrackings)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("FK__ClickTrac__Produ__693CA210");
+        });
+
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF1A20E302");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF297126D3");
 
             entity.Property(e => e.OrderId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.OrderDate)
@@ -156,35 +193,35 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__Orders__Affiliat__534D60F1");
+                .HasConstraintName("FK__Orders__Affiliat__59FA5E80");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Orders__Customer__52593CB8");
+                .HasConstraintName("FK__Orders__Customer__59063A47");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36CC29E11B3");
+            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36CA4F09849");
 
-            entity.Property(e => e.OrderDetailId).ValueGeneratedNever();
+            entity.Property(e => e.OrderDetailId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("FK__OrderDeta__Order__5629CD9C");
+                .HasConstraintName("FK__OrderDeta__Order__5DCAEF64");
 
             entity.HasOne(d => d.Product).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("FK__OrderDeta__Produ__571DF1D5");
+                .HasConstraintName("FK__OrderDeta__Produ__5EBF139D");
         });
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CDBCDCC208");
+            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CDDDC7D065");
 
-            entity.Property(e => e.ProductId).ValueGeneratedNever();
+            entity.Property(e => e.ProductId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CommissionRate).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.CreateAt)
                 .HasDefaultValueSql("(getdate())")
@@ -200,16 +237,16 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.Brand).WithMany(p => p.Products)
                 .HasForeignKey(d => d.BrandId)
-                .HasConstraintName("FK__Products__BrandI__4CA06362");
+                .HasConstraintName("FK__Products__BrandI__49C3F6B7");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Products)
                 .HasForeignKey(d => d.CategoryId)
-                .HasConstraintName("FK__Products__Catego__4BAC3F29");
+                .HasConstraintName("FK__Products__Catego__48CFD27E");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCAC32B03FBB");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCAC1B940F71");
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.CreateAt)
