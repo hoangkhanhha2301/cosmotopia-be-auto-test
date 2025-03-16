@@ -12,16 +12,23 @@ namespace Cosmetics.Repositories
         {
             return await _dbSet
                 .Where(o => o.CustomerId == customerId)
-                .Include(o => o.OrderDetails) // Include order details if needed
-                .Include(o => o.Customer)     // Include customer info if needed
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Product)   // Include order details if needed
+                .Include(o => o.Customer) // Include customer info if needed
                 .ToListAsync();
         }
-        public async Task<Order?> GetByIdAsync(Guid id)
+        public async Task<Order?> GetByIdAsync(Guid id, string includeProperties = null)
         {
-            return await _dbSet
-                .Include(o => o.Customer) // Include Customer data
-                .Include(o => o.OrderDetails) // Include OrderDetails if needed
-                .FirstOrDefaultAsync(o => o.OrderId == id);
+            var query = _context.Orders.AsQueryable();
+
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProp in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProp);
+                }
+            }
+
+            return await query.FirstOrDefaultAsync(o => o.OrderId == id);
         }
     }
 

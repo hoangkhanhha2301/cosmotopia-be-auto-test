@@ -117,7 +117,7 @@ namespace Cosmetics.Controllers
         [Authorize]
         public async Task<IActionResult> GetOrder(Guid id)
         {
-            var order = await _unitOfWork.Orders.GetByIdAsync(id);
+            var order = await _unitOfWork.Orders.GetByIdAsync(id, includeProperties : "OrderDetails.Product,Customer");
             if (order == null) return NotFound();
 
             var responseDTO = new OrderResponseDTO
@@ -137,6 +137,8 @@ namespace Cosmetics.Controllers
                     OrderDetailId = od.OrderDetailId,
                     OrderId = od.OrderId,
                     ProductId = od.ProductId,
+                    Name = od.Product.Name,
+                    ImageUrl = od.Product.ImageUrls,
                     Quantity = od.Quantity,
                     UnitPrice = od.UnitPrice
                 }).ToList()
@@ -204,6 +206,8 @@ namespace Cosmetics.Controllers
                         OrderDetailId = od.OrderDetailId,
                         OrderId = od.OrderId,
                         ProductId = od.ProductId,
+                        Name = od.Product.Name,
+                        ImageUrl = od.Product.ImageUrls,
                         Quantity = od.Quantity,
                         UnitPrice = od.UnitPrice
                     }).ToList() ?? new List<OrderDetailDTO>()

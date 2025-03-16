@@ -25,11 +25,11 @@ public partial class AffiliateProfile
 
     public bool? IsActive { get; set; }
 
-    public virtual User User { get; set; }
-
     public virtual ICollection<AffiliateLink> AffiliateLinks { get; set; } = new List<AffiliateLink>();
 
     public virtual ICollection<AffiliatePayment> AffiliatePayments { get; set; } = new List<AffiliatePayment>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    public virtual User User { get; set; }
 }
