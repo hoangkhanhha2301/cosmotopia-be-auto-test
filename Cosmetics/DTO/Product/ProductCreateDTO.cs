@@ -14,5 +14,10 @@
         public Guid? CategoryId { get; set; }
 
         public Guid? BrandId { get; set; }
+
+        public List<string> imageUrls { get; set; } 
+
+
+
     }
 }
