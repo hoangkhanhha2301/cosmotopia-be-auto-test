@@ -9,6 +9,8 @@ public partial class AffiliateProfile
 {
     public Guid AffiliateProfileId { get; set; }
 
+    public int UserId { get; set; }
+
     public string BankAccount { get; set; }
 
     public string BankName { get; set; }
@@ -22,6 +24,8 @@ public partial class AffiliateProfile
     public decimal? TotalEarnings { get; set; }
 
     public bool? IsActive { get; set; }
+
+    public virtual User User { get; set; }
 
     public virtual ICollection<AffiliateLink> AffiliateLinks { get; set; } = new List<AffiliateLink>();
 

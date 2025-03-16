@@ -135,6 +135,9 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAffiliateProfileRepository, AffiliateProfileRepository>();
+//builder.Services.AddScoped<IAffiliateLinkRepository, AffiliateLinkRepository>();
 //Add Services
 builder.Services.AddHostedService<ExpiredOtpCleanerService>();
 
