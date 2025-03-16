@@ -10,6 +10,9 @@ namespace Cosmetics.Repositories.UnitOfWork
         IBrandRepository Brands { get; }
         ICategoryRepository Categories { get; }
         IProductRepository Products { get; }
+        IUserRepository Users { get; }
+        IAffiliateProfileRepository AffiliateProfiles { get; }
+        //IAffiliateLinkRepository AffiliateLinks { get; }
     }
 
 }

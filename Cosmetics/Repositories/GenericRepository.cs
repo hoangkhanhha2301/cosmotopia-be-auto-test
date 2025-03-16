@@ -21,9 +21,14 @@ namespace Cosmetics.Repositories
             return await _dbSet.ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(object id)
+        public async Task<T> GetByIdAsync<TId>(TId id)
         {
-            return await _dbSet.FindAsync(id);
+            return await _dbSet.FindAsync(id)!;
+        }
+
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.Where(predicate).ToListAsync();
         }
 
         public async Task AddAsync(T entity)
