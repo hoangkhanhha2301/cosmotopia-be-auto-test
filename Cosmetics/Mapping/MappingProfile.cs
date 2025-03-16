@@ -38,9 +38,10 @@ namespace Cosmetics.Mapping
             CreateMap<OrderDetail, OrderDetailDTO>().ReverseMap();
             CreateMap<OrderDetail, OrderDetailUpdateDTO>().ReverseMap();
             //Affiliate
-            CreateMap<AffiliateProfile, AffiliateProfileCreateDTO>().ReverseMap();
-            CreateMap<AffiliateProfile, AffiliateProfileDTO>().ReverseMap();
-            CreateMap<AffiliateProfile, AffiliateProfileUpdateDTO>().ReverseMap();
+            CreateMap<AffiliateProfile, AffiliateIncomeDto>().ReverseMap();
+            CreateMap<AffiliateProfile, GenerateAffiliateLinkDto>().ReverseMap();
+            CreateMap<AffiliateProfile, RegisterAffiliateDto>().ReverseMap();
+            CreateMap<AffiliateProfile, TopProductDto>().ReverseMap();
         }
     }
 }
