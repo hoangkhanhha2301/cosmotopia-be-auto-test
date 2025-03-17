@@ -72,6 +72,21 @@ namespace Cosmetics.Service.Affiliate
                 ConversionRate = 0 // TODO: Thêm logic tính tỷ lệ
             };
         }
+        public async Task<AffiliateProductLink> GetAffiliateProductLinkByReferralCode(string referralCode)
+        {
+            // Tìm kiếm trong bảng AffiliateProductLinks theo referralCode
+            var affiliateProductLink = await _context.AffiliateProductLinks
+                .FirstOrDefaultAsync(l => l.ReferralCode == referralCode);
+
+            // Nếu không tìm thấy referralCode hợp lệ, trả về null
+            if (affiliateProductLink == null)
+            {
+                return null;
+            }
+
+            return affiliateProductLink; // Trả về thông tin liên quan đến link affiliate và sản phẩm
+        }
+
 
         public async Task<List<TopProductDto>> GetTopProducts(Guid affiliateProfileId, int topCount)
         {
