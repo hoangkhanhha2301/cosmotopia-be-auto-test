@@ -97,31 +97,31 @@ public class AffiliateController : ControllerBase
     }
 
     [HttpGet("track-click")]
-    public async Task<IActionResult> TrackClick([FromQuery] string referralCode)
+public async Task<IActionResult> TrackClick([FromQuery] string referralCode)
+{
+    // Kiểm tra referralCode có hợp lệ hay không
+    var affiliateLink = await _affiliateService.GetAffiliateProductLinkByReferralCode(referralCode);
+
+    if (affiliateLink == null)
     {
-        // Kiểm tra referralCode có hợp lệ hay không
-        var affiliateLink = await _affiliateService.GetAffiliateProductLinkByReferralCode(referralCode);
-
-        if (affiliateLink == null)
-        {
-            return BadRequest("Invalid referral code or product.");
-        }
-
-        // Tạo một đối tượng ClickTracking và lưu vào bảng
-        var click = new ClickTracking
-        {
-            AffiliateProfileId = affiliateLink.AffiliateProfileId,  // Dùng AffiliateProfileId từ affiliate link
-            ProductId = affiliateLink.ProductId,
-            ReferralCode = referralCode,
-            ClickedAt = DateTime.UtcNow // Thời gian click
-        };
-
-        // Lưu vào bảng ClickTracking
-        _context.ClickTrackings.Add(click);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { Message = "Click tracked successfully!" });
+        return BadRequest("Invalid referral code or product.");
     }
+
+    // Tạo một đối tượng ClickTracking và lưu vào bảng
+    var click = new ClickTracking
+    {
+        AffiliateProfileId = affiliateLink.AffiliateProfileId,  // Dùng AffiliateProfileId từ affiliate link
+        ProductId = affiliateLink.ProductId,
+        ReferralCode = referralCode,
+        ClickedAt = DateTime.UtcNow // Thời gian click
+    };
+
+    // Lưu vào bảng ClickTracking
+    _context.ClickTrackings.Add(click);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { Message = "Click tracked successfully!" });
+}
 
 
     [HttpGet("debug-token")]
