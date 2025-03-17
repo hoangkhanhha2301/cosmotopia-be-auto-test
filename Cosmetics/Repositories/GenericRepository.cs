@@ -36,9 +36,10 @@ namespace Cosmetics.Repositories
             await _dbSet.AddAsync(entity);
         }
 
-        public void Update(T entity)
+        public async Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
+            await Task.CompletedTask;
         }
 
         public void Delete(T entity)

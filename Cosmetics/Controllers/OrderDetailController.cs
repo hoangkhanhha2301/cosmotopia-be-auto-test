@@ -124,7 +124,7 @@ namespace Cosmetics.Controllers
             }
 
             _mapper.Map(orderDetailDTO, existingOrderDetail);
-            _unitOfWork.OrderDetails.Update(existingOrderDetail);
+            _unitOfWork.OrderDetails.UpdateAsync(existingOrderDetail);
             await _unitOfWork.CompleteAsync();
 
             return NoContent();

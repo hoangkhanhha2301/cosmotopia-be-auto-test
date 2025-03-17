@@ -184,7 +184,7 @@ namespace ComedicShopAPI.Controllers
             if (BCrypt.Net.BCrypt.Verify(model.Otp, user.Otp) && user.OtpExpiration > DateTime.UtcNow)
             {
                 user.Verify = 4;
-                _unitOfWork.Users.Update(user);
+                _unitOfWork.Users.UpdateAsync(user);
                 await _unitOfWork.CompleteAsync();
                 return Ok(new ApiResponse { Success = true, Message = "OTP verified successfully" });
             }
@@ -208,10 +208,16 @@ namespace ComedicShopAPI.Controllers
                     return Unauthorized("User ID or RoleType not found in token.");
                 }
 
+
+            user.RoleType = AffiliateRole;
+            _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.CompleteAsync();
+
                 if (roleTypeClaim == "Customers")
                 {
                     roleTypeClaim = "3"; // Chuyển đổi nếu token chứa text thay vì số
                 }
+
 
                 if (!int.TryParse(userIdClaim, out var userId))
                 {
@@ -304,7 +310,7 @@ namespace ComedicShopAPI.Controllers
             }
 
             user.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-            _unitOfWork.Users.Update(user);
+            _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse { Success = true, Message = "Password changed successfully" });
@@ -396,7 +402,7 @@ namespace ComedicShopAPI.Controllers
             user.LastName = model.LastName;
             user.Phone = model.Phone;
 
-            _unitOfWork.Users.Update(user);
+            _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse { Success = true, Message = "User updated successfully" });
@@ -445,7 +451,7 @@ namespace ComedicShopAPI.Controllers
                 user.RoleType = model.RoleType.Value;
             }
 
-            _unitOfWork.Users.Update(user);
+            _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse { Success = true, Message = "User status and role updated successfully" });
@@ -469,7 +475,7 @@ namespace ComedicShopAPI.Controllers
             user.RefreshToken = BCrypt.Net.BCrypt.HashPassword(token);
             user.TokenExpiry = DateTime.UtcNow.AddHours(1);
 
-            _unitOfWork.Users.Update(user);
+            _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.CompleteAsync();
 
             var resetLink = $"http://localhost:3000/newPass?token={token}";
@@ -509,7 +515,7 @@ namespace ComedicShopAPI.Controllers
             matchedUser.RefreshToken = null;
             matchedUser.TokenExpiry = null;
 
-            _unitOfWork.Users.Update(matchedUser);
+            _unitOfWork.Users.UpdateAsync(matchedUser);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse { Success = true, Message = "Password has been reset successfully" });

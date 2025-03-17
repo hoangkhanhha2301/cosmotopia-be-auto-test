@@ -4,6 +4,7 @@ using Cosmetics.DTO.Brand;
 using Cosmetics.DTO.Category;
 using Cosmetics.DTO.Order;
 using Cosmetics.DTO.OrderDetail;
+using Cosmetics.DTO.Payment;
 using Cosmetics.DTO.Product;
 using Cosmetics.DTO.User;
 using Cosmetics.DTO.User.Admin;
@@ -38,10 +39,18 @@ namespace Cosmetics.Mapping
             CreateMap<OrderDetail, OrderDetailDTO>().ReverseMap();
             CreateMap<OrderDetail, OrderDetailUpdateDTO>().ReverseMap();
             //Affiliate
+
+
+            //Payment
+            CreateMap<PaymentTransaction, PaymentTransactionDTO>().ReverseMap();
+            CreateMap<PaymentTransaction, PaymentRequestDTO>().ReverseMap();
+            CreateMap<PaymentTransaction, PaymentResponseDTO>().ReverseMap();
+
             CreateMap<AffiliateProfile, AffiliateIncomeDto>().ReverseMap();
             CreateMap<AffiliateProfile, GenerateAffiliateLinkDto>().ReverseMap();
             CreateMap<AffiliateProfile, RegisterAffiliateDto>().ReverseMap();
             CreateMap<AffiliateProfile, TopProductDto>().ReverseMap();
+
         }
     }
 }

@@ -205,7 +205,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            _unitOfWork.Brands.Update(update);
+            _unitOfWork.Brands.UpdateAsync(update);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse

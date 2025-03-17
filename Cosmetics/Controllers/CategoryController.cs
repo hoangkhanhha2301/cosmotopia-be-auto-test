@@ -209,7 +209,7 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            _unitOfWork.Categories.Update(update);
+            _unitOfWork.Categories.UpdateAsync(update);
             await _unitOfWork.CompleteAsync();
 
             return Ok(new ApiResponse
