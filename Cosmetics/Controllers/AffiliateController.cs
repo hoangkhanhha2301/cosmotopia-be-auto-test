@@ -110,17 +110,19 @@ public class AffiliateController : ControllerBase
         // Tạo một đối tượng ClickTracking và lưu vào bảng
         var click = new ClickTracking
         {
-            AffiliateProfileId = affiliateLink.AffiliateProfileId,
+            AffiliateProfileId = affiliateLink.AffiliateProfileId,  // Dùng AffiliateProfileId từ affiliate link
             ProductId = affiliateLink.ProductId,
             ReferralCode = referralCode,
             ClickedAt = DateTime.UtcNow // Thời gian click
         };
 
+        // Lưu vào bảng ClickTracking
         _context.ClickTrackings.Add(click);
         await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Click tracked successfully!" });
     }
+
 
     [HttpGet("debug-token")]
     public IActionResult DebugToken()
