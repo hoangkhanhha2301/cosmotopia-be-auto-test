@@ -1,4 +1,5 @@
 ﻿using Cosmetics.DTO.OrderDetail;
+using Cosmetics.DTO.Payment;
 using Cosmetics.Enum;
 
 namespace Cosmetics.DTO.Order
@@ -16,6 +17,7 @@ namespace Cosmetics.DTO.Order
         public string PaymentMethod { get; set; }
         public string PaymentStatus { get; set; }
         public List<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
+        public List<PaymentTransactionDTO> PaymentTransactions { get; set; } = new List<PaymentTransactionDTO>();
     }
 
 
