@@ -12,9 +12,12 @@ namespace Cosmetics.Repositories.UnitOfWork
         public IBrandRepository Brands { get; }
         public ICategoryRepository Categories { get; }
         public IProductRepository Products { get; }
-        public IUserRepository Users { get; } 
-        public IAffiliateProfileRepository AffiliateProfiles { get; } 
-        //public IAffiliateLinkRepository AffiliateLinks { get; } // Add this
+        public IUserRepository Users { get; }
+        public IAffiliateProfileRepository AffiliateProfiles { get; }
+        public IGenericRepository<PaymentTransaction> PaymentTransactions { get; } 
+
+        // Uncomment if you need AffiliateLinks later
+        // public IAffiliateLinkRepository AffiliateLinks { get; }
 
         public UnitOfWork(
             ComedicShopDBContext context,
@@ -24,8 +27,10 @@ namespace Cosmetics.Repositories.UnitOfWork
             ICategoryRepository categoryRepository,
             IProductRepository productRepository,
             IUserRepository userRepository,
-            IAffiliateProfileRepository affiliateProfileRepository
-            //IAffiliateLinkRepository affiliateLinkRepository) // Add this
+            IAffiliateProfileRepository affiliateProfileRepository,
+            IGenericRepository<PaymentTransaction> paymentTransactionRepository
+            // Uncomment and add if needed
+            // IAffiliateLinkRepository affiliateLinkRepository
             )
         {
             _context = context;
@@ -34,14 +39,16 @@ namespace Cosmetics.Repositories.UnitOfWork
             Brands = brandRepository;
             Categories = categoryRepository;
             Products = productRepository;
-            Users = userRepository; // Assign this
-            //AffiliateProfiles = affiliateProfileRepository; // Assign this
-            //AffiliateLinks = affiliateLinkRepository; // Assign this
+            Users = userRepository;
+            AffiliateProfiles = affiliateProfileRepository; // Fixed: Assigned
+            PaymentTransactions = paymentTransactionRepository; // Fixed: Assigned
+
+            // Uncomment if needed
+            // AffiliateLinks = affiliateLinkRepository;
         }
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 
         public void Dispose() => _context.Dispose();
     }
-
 }

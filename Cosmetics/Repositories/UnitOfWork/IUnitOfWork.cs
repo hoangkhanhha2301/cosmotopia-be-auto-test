@@ -1,4 +1,5 @@
 ﻿using Cosmetics.Interfaces;
+using Cosmetics.Models;
 
 namespace Cosmetics.Repositories.UnitOfWork
 {
@@ -12,6 +13,8 @@ namespace Cosmetics.Repositories.UnitOfWork
         IProductRepository Products { get; }
         IUserRepository Users { get; }
         IAffiliateProfileRepository AffiliateProfiles { get; }
+
+        IGenericRepository<PaymentTransaction> PaymentTransactions { get; }
         //IAffiliateLinkRepository AffiliateLinks { get; }
     }
 
