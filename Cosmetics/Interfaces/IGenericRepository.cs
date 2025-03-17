@@ -8,7 +8,7 @@ namespace Cosmetics.Interfaces
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
         Task<T> GetByIdAsync<Tid>(Tid id);
         Task AddAsync(T entity);
-        void Update(T entity);
+        Task UpdateAsync(T entity);
         void Delete(T entity);
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
         Task<IEnumerable<T>> GetAsync(

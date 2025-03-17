@@ -5,6 +5,7 @@ using Cosmetics.Models;
 using Cosmetics.Repositories;
 using Cosmetics.Repositories.UnitOfWork;
 using Cosmetics.Service.OTP;
+using Cosmetics.Service.Payment;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -137,6 +138,17 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAffiliateProfileRepository, AffiliateProfileRepository>();
+builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+
+//VNPay
+builder.Services.AddScoped<IPaymentService, VNPayService>(sp =>
+    new VNPayService(
+        sp.GetRequiredService<IUnitOfWork>(),
+        builder.Configuration["VNPay:TmnCode"],
+        builder.Configuration["VNPay:HashSecret"],
+        builder.Configuration["VNPay:Url"],
+        builder.Configuration["VNPay:ReturnUrl"]
+    ));
 //builder.Services.AddScoped<IAffiliateLinkRepository, AffiliateLinkRepository>();
 //Add Services
 builder.Services.AddHostedService<ExpiredOtpCleanerService>();

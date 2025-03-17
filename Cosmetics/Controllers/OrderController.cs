@@ -45,7 +45,6 @@ namespace Cosmetics.Controllers
                     Status = order.Status,
                     OrderDate = order.OrderDate,
                     PaymentMethod = order.PaymentMethod,
-                    PaymentStatus = order.PaymentStatus,
                     OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
                     {
                         OrderDetailId = od.OrderDetailId,
@@ -81,8 +80,7 @@ namespace Cosmetics.Controllers
                 TotalAmount = dto.TotalAmount,
                 Status = dto.Status,
                 OrderDate = dto.OrderDate ?? DateTime.UtcNow,
-                PaymentMethod = dto.PaymentMethod,
-                PaymentStatus = dto.PaymentStatus
+                PaymentMethod = dto.PaymentMethod
             };
 
             await _unitOfWork.Orders.AddAsync(order);
@@ -106,9 +104,8 @@ namespace Cosmetics.Controllers
             order.Status = dto.Status;
             order.OrderDate = dto.OrderDate;
             order.PaymentMethod = dto.PaymentMethod;
-            order.PaymentStatus = dto.PaymentStatus;
 
-            _unitOfWork.Orders.Update(order);
+            _unitOfWork.Orders.UpdateAsync(order);
             await _unitOfWork.CompleteAsync();
             return NoContent();
         }
@@ -131,7 +128,6 @@ namespace Cosmetics.Controllers
                 Status = order.Status,
                 OrderDate = order.OrderDate,
                 PaymentMethod = order.PaymentMethod,
-                PaymentStatus = order.PaymentStatus,
                 OrderDetails = order.OrderDetails.Select(od => new OrderDetailDTO
                 {
                     OrderDetailId = od.OrderDetailId,
@@ -200,7 +196,6 @@ namespace Cosmetics.Controllers
                     Status = order.Status,
                     OrderDate = order.OrderDate,
                     PaymentMethod = order.PaymentMethod,
-                    PaymentStatus = order.PaymentStatus,
                     OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
                     {
                         OrderDetailId = od.OrderDetailId,

@@ -238,7 +238,7 @@ namespace Cosmetics.Controllers
             existingProduct.CommissionRate = productDTO.CommissionRate;
             existingProduct.IsActive = productDTO.IsActive;
 
-             _unitOfWork.Products.Update(existingProduct);
+             _unitOfWork.Products.UpdateAsync(existingProduct);
             await _unitOfWork.CompleteAsync();
 
 

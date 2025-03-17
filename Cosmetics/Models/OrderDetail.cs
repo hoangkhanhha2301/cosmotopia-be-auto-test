@@ -19,6 +19,8 @@ public partial class OrderDetail
 
     public decimal? CommissionAmount { get; set; }
 
+    public virtual ICollection<AffiliateCommission> AffiliateCommissions { get; set; } = new List<AffiliateCommission>();
+
     public virtual Order Order { get; set; }
 
     public virtual Product Product { get; set; }

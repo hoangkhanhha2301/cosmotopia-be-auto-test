@@ -13,8 +13,10 @@ namespace Cosmetics.Repositories.UnitOfWork
         IProductRepository Products { get; }
         IUserRepository Users { get; }
         IAffiliateProfileRepository AffiliateProfiles { get; }
+        IPaymentTransactionRepository PaymentTransactions { get; }
 
-        IGenericRepository<PaymentTransaction> PaymentTransactions { get; }
+        
+
         //IAffiliateLinkRepository AffiliateLinks { get; }
     }
 

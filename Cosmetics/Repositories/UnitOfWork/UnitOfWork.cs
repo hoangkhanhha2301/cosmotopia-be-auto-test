@@ -14,7 +14,7 @@ namespace Cosmetics.Repositories.UnitOfWork
         public IProductRepository Products { get; }
         public IUserRepository Users { get; }
         public IAffiliateProfileRepository AffiliateProfiles { get; }
-        public IGenericRepository<PaymentTransaction> PaymentTransactions { get; } 
+        public IPaymentTransactionRepository PaymentTransactions { get; }
 
         // Uncomment if you need AffiliateLinks later
         // public IAffiliateLinkRepository AffiliateLinks { get; }
@@ -28,7 +28,7 @@ namespace Cosmetics.Repositories.UnitOfWork
             IProductRepository productRepository,
             IUserRepository userRepository,
             IAffiliateProfileRepository affiliateProfileRepository,
-            IGenericRepository<PaymentTransaction> paymentTransactionRepository
+            IPaymentTransactionRepository paymentTransactionRepository
             // Uncomment and add if needed
             // IAffiliateLinkRepository affiliateLinkRepository
             )
