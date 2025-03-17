@@ -19,6 +19,8 @@ namespace Cosmetics.Service.Affiliate
         // Lấy thông tin Affiliate Profile dựa trên UserId
         Task<AffiliateProfile> GetAffiliateProfile(int userId);
 
+        Task<AffiliateProductLink> GetAffiliateProductLinkByReferralCode(string referralCode);
+
         // Lấy thu nhập hàng tuần của Affiliate (sử dụng Guid)
         Task<AffiliateIncomeDto> GetWeeklyIncome(Guid affiliateProfileId);
 
