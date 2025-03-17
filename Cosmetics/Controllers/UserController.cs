@@ -14,6 +14,8 @@ using AutoMapper;
 using Cosmetics.Service.OTP;
 using Cosmetics.DTO.User.Admin;
 using Cosmetics.Repositories.UnitOfWork;
+using Cosmetics.DTO.Affiliate;
+using Cosmetics.Service.Affiliate;
 
 namespace ComedicShopAPI.Controllers
 {
@@ -25,13 +27,18 @@ namespace ComedicShopAPI.Controllers
         private readonly AppSetting _appSettings;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
+        private readonly IAffiliateService _affiliateService;
+        private readonly ComedicShopDBContext _context;
 
-        public UserController(IUnitOfWork unitOfWork, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService)
+
+        public UserController(ComedicShopDBContext context,IUnitOfWork unitOfWork, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService, IAffiliateService affiliateService)
         {
             _unitOfWork = unitOfWork;
             _appSettings = optionsMonitor.CurrentValue;
             _mapper = mapper;
             _emailService = emailService;
+            _affiliateService = affiliateService;
+            _context = context;
         }
 
         [HttpPost("Login")]
@@ -160,7 +167,6 @@ namespace ComedicShopAPI.Controllers
                 return StatusCode(500, new ApiResponse { Success = false, Message = $"An unexpected error occurred: {ex.Message}" });
             }
         }
-
         [HttpPost("verifyotp")]
         public async Task<IActionResult> VerifyOtp(VerifyOtpModel model)
         {
@@ -185,40 +191,109 @@ namespace ComedicShopAPI.Controllers
 
             return Ok(new ApiResponse { Success = false, Message = "Invalid OTP or OTP has expired" });
         }
-
-        [HttpPost("become-affiliate")]
-        public async Task<IActionResult> BecomeAffiliate()
+        
+        [HttpPost("register-affiliate")]
+        public async Task<IActionResult> RegisterAffiliate([FromBody] RegisterAffiliateDto dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userId, out int parsedUserId))
+            try
             {
-                return Unauthorized(new ApiResponse { Success = false, Message = "User not authenticated" });
-            }
+                // Lấy User ID & Role từ JWT
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var roleTypeClaim = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            var user = await _unitOfWork.Users.GetByIdAsync(parsedUserId);
-            if (user == null)
-            {
-                return NotFound(new ApiResponse { Success = false, Message = "User not found" });
-            }
+                Console.WriteLine($"UserIdClaim: {userIdClaim}, RoleTypeClaim: {roleTypeClaim}");
 
-            const int AffiliateRole = 2;
-            if (user.RoleType == AffiliateRole)
-            {
-                return BadRequest(new ApiResponse { Success = false, Message = "You are already an Affiliate" });
-            }
+                if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleTypeClaim))
+                {
+                    return Unauthorized("User ID or RoleType not found in token.");
+                }
+
 
             user.RoleType = AffiliateRole;
             _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.CompleteAsync();
 
-            var newToken = GenerateToken(user);
-            return Ok(new ApiResponse
+                if (roleTypeClaim == "Customers")
+                {
+                    roleTypeClaim = "3"; // Chuyển đổi nếu token chứa text thay vì số
+                }
+
+
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    return BadRequest("Invalid User ID format.");
+                }
+
+                if (!int.TryParse(roleTypeClaim, out var roleType))
+                {
+                    return BadRequest("Invalid Role Type format.");
+                }
+
+                if (roleType != 3)
+                {
+                    return BadRequest("Only customers (RoleType = 3) can register as affiliates.");
+                }
+
+                // Kiểm tra user đã là affiliate chưa
+                var existingAffiliate = await _affiliateService.GetAffiliateProfile(userId);
+                if (existingAffiliate != null)
+                {
+                    return BadRequest("You are already an affiliate.");
+                }
+
+
+                // Tạo mã giới thiệu (Referral Code)
+                var referralCode = Guid.NewGuid().ToString("N").Substring(0, 8);
+
+                var affiliateProfile = new AffiliateProfile
+                {
+                    AffiliateProfileId = Guid.NewGuid(),
+                    UserId = userId,
+                    BankName = dto.BankName,
+                    BankAccountNumber = dto.BankAccountNumber,
+                    BankBranch = dto.BankBranch,
+                    ReferralCode = referralCode,
+                    CreatedAt = DateTime.Now
+                };
+
+
+                var registerDto = new RegisterAffiliateDto
+                {
+                    BankName = affiliateProfile.BankName,
+                    BankAccountNumber = affiliateProfile.BankAccountNumber,
+                    BankBranch = affiliateProfile.BankBranch
+                };
+
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // Gọi RegisterAffiliate với đúng kiểu dữ liệu
+                        await _affiliateService.RegisterAffiliate(dto, userId);
+
+                        // Cập nhật Role của user từ 3 (Customer) -> 2 (Affiliate)
+                        await _affiliateService.UpdateUserRole(userId, 2);
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        return StatusCode(500, $"Error occurred: {ex.Message}");
+                    }
+                }
+
+
+                return Ok(new { Message = "Successfully registered as an affiliate!", ReferralCode = referralCode });
+            }
+            catch (Exception ex)
             {
-                Success = true,
-                Message = "Successfully registered as an Affiliate",
-                Data = new { UserId = user.UserId, Role = GetUserRole(user.RoleType), Token = newToken }
-            });
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
+
+
+
 
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword(ChangePasswordModel model)

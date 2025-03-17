@@ -11,23 +11,27 @@ public partial class AffiliateProfile
 
     public int UserId { get; set; }
 
-    public string BankAccount { get; set; }
-
     public string BankName { get; set; }
 
-    public string PaymentMethod { get; set; }
+    public string BankAccountNumber { get; set; }
 
-    public string ApplicationStatus { get; set; }
-
-    public DateTime? CreateAt { get; set; }
+    public string BankBranch { get; set; }
 
     public decimal? TotalEarnings { get; set; }
 
-    public bool? IsActive { get; set; }
+    public decimal? PendingAmount { get; set; }
 
-    public virtual ICollection<AffiliateLink> AffiliateLinks { get; set; } = new List<AffiliateLink>();
+    public decimal? WithdrawnAmount { get; set; }
 
-    public virtual ICollection<AffiliatePayment> AffiliatePayments { get; set; } = new List<AffiliatePayment>();
+    public string ReferralCode { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
+
+    public virtual ICollection<AffiliateCommission> AffiliateCommissions { get; set; } = new List<AffiliateCommission>();
+
+    public virtual ICollection<AffiliateProductLink> AffiliateProductLinks { get; set; } = new List<AffiliateProductLink>();
+
+    public virtual ICollection<ClickTracking> ClickTrackings { get; set; } = new List<ClickTracking>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 

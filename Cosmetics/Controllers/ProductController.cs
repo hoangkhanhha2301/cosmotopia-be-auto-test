@@ -15,13 +15,11 @@ namespace Cosmetics.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly Cloudinary _cloudinary;
 
-        public ProductController(IUnitOfWork unitOfWork, IMapper mapper, Cloudinary cloudinary)
+        public ProductController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _cloudinary = cloudinary;
         }
 
         [HttpGet]
@@ -38,7 +36,12 @@ namespace Cosmetics.Controllers
                 });
             }
 
+            var list = await _unitOfWork.Products.GetAllAsync();
+
+            var totalCount = list.Count();
+
             page ??= 1;
+            pageSize ??= 10;
 
             var products = await _unitOfWork.Products.GetAsync(
                 filter: p => string.IsNullOrEmpty(search) || p.Name.ToLower().Contains(search.ToLower()),
@@ -52,13 +55,18 @@ namespace Cosmetics.Controllers
                 includes: [p => p.Brand, p => p.Category]
                 );
 
+
             var productDTO = _mapper.Map<List<ProductDTO>>(products);
-            return Ok(new ApiResponse
+            var response = new
             {
-                Success = true,
-                StatusCode = StatusCodes.Status200OK,
-                Data = productDTO
-            });
+                TotalCount = totalCount,
+                ToTalPages = (int)Math.Ceiling(totalCount / (double)pageSize.Value),
+                CurrentPage = page,
+                PageSize = pageSize,
+                Products = productDTO
+            };
+
+            return Ok(response);
         }
 
         [HttpGet]

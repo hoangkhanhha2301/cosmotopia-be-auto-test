@@ -15,11 +15,11 @@
    "T4TemplatePath": null,
    "Tables": [
       {
-         "Name": "[dbo].[AffiliateLinks]",
+         "Name": "[dbo].[AffiliateCommissions]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[AffiliatePayments]",
+         "Name": "[dbo].[AffiliateProductLinks]",
          "ObjectType": 0
       },
       {
@@ -32,6 +32,10 @@
       },
       {
          "Name": "[dbo].[Categories]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ClickTracking]",
          "ObjectType": 0
       },
       {
