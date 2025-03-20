@@ -22,34 +22,7 @@ namespace Cosmetics.Service.Affiliate
             return await _context.Users.FindAsync(userId);
         }
 
-        public async Task<bool> RegisterAffiliate(RegisterAffiliateDto dto, int userId)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null || user.RoleType != 3)
-                throw new Exception("User không hợp lệ hoặc đã là Affiliate!");
 
-            var existingProfile = await _context.AffiliateProfiles
-                .FirstOrDefaultAsync(a => a.UserId == userId);
-            if (existingProfile != null)
-                throw new Exception("Bạn đã là Affiliate!");
-
-            var affiliateProfile = new AffiliateProfile
-            {
-                AffiliateProfileId = Guid.NewGuid(),
-                UserId = userId,
-                BankName = dto.BankName,
-                BankAccountNumber = dto.BankAccountNumber,
-                BankBranch = dto.BankBranch,
-                ReferralCode = Guid.NewGuid().ToString().Substring(0, 8),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.AffiliateProfiles.Add(affiliateProfile);
-            user.RoleType = 2;
-
-            await _context.SaveChangesAsync();
-            return true;
-        }
 
         public async Task<AffiliateProfile> GetAffiliateProfile(int userId)
         {
@@ -120,56 +93,8 @@ namespace Cosmetics.Service.Affiliate
 
 
 
-        public async Task<string> GenerateAffiliateLink(Guid affiliateProfileId, Guid productId)
-        {
-            var existingLink = await _context.AffiliateProductLinks
-                .FirstOrDefaultAsync(l => l.AffiliateProfileId == affiliateProfileId && l.ProductId == productId);
 
-            if (existingLink != null)
-            {
-                return $"http://localhost:3000/product/{productId}?ref={existingLink.ReferralCode}";
-            }
 
-            string referralCode = Guid.NewGuid().ToString().Substring(0, 8);
-
-            var newLink = new AffiliateProductLink
-            {
-                AffiliateProfileId = affiliateProfileId,
-                ProductId = productId,
-                ReferralCode = referralCode,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.AffiliateProductLinks.Add(newLink);
-            await _context.SaveChangesAsync();
-
-            return $"http://localhost:3000/product/{productId}?ref={referralCode}";
-        }
-
-        // 🆕 Track Click (Thêm lượt click vào bảng ClickTracking)
-        public async Task<bool> TrackClick(string referralCode, DateTime clickTime)
-        {
-            var affiliateLink = await _context.AffiliateProductLinks
-                .FirstOrDefaultAsync(l => l.ReferralCode == referralCode);
-
-            if (affiliateLink == null)
-            {
-                return false;
-            }
-
-            var click = new ClickTracking
-            {
-                AffiliateProfileId = affiliateLink.AffiliateProfileId,
-                ProductId = affiliateLink.ProductId,
-                ReferralCode = referralCode,
-                ClickedAt = clickTime
-            };
-
-            _context.ClickTrackings.Add(click);
-            await _context.SaveChangesAsync();
-
-            return true;
-        }
 
         // 🆕 Lấy số lần click theo AffiliateProfileId
         public async Task<int> GetClickCount(Guid affiliateProfileId)
@@ -187,17 +112,24 @@ namespace Cosmetics.Service.Affiliate
                 .ToListAsync();
         }
 
-        public async Task UpdateUserRole(int userId, int roleType)
+        public Task<bool> RegisterAffiliate(RegisterAffiliateDto dto, int userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-            if (user == null)
-            {
-                throw new Exception("User not found.");
-            }
-
-            user.RoleType = roleType; // Giả sử User có cột RoleType để lưu vai trò
-            await _context.SaveChangesAsync();
+            throw new NotImplementedException();
         }
 
+        public Task UpdateUserRole(int userId, int roleType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> GenerateAffiliateLink(Guid affiliateProfileId, Guid productId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> TrackClick(string referralCode, DateTime clickTime)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

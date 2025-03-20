@@ -30,6 +30,8 @@ public partial class ComedicShopDBContext : DbContext
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
 
+    public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -38,7 +40,9 @@ public partial class ComedicShopDBContext : DbContext
     {
         modelBuilder.Entity<AffiliateCommission>(entity =>
         {
-            entity.HasKey(e => e.CommissionId).HasName("PK__Affiliat__6C2C8CEC6462BF7F");
+            entity.HasKey(e => e.CommissionId).HasName("PK__Affiliat__6C2C8CECD4307B72");
+
+            entity.HasIndex(e => e.OrderDetailId, "IX_AffiliateCommissions_OrderDetailID");
 
             entity.Property(e => e.CommissionId).HasColumnName("CommissionID");
             entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18, 2)");
@@ -50,19 +54,21 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.AffiliateCommissions)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__Affiliate__Affil__6EF57B66");
+                .HasConstraintName("FK__Affiliate__Affil__71D1E811");
 
             entity.HasOne(d => d.OrderDetail).WithMany(p => p.AffiliateCommissions)
                 .HasForeignKey(d => d.OrderDetailId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Affiliate__Order__6E01572D");
+                .HasConstraintName("FK__Affiliate__Order__70DDC3D8");
         });
 
         modelBuilder.Entity<AffiliateProductLink>(entity =>
         {
-            entity.HasKey(e => e.LinkId).HasName("PK__Affiliat__2D1221555FDC74A6");
+            entity.HasKey(e => e.LinkId).HasName("PK__Affiliat__2D122155462C115A");
 
-            entity.HasIndex(e => e.ReferralCode, "UQ__Affiliat__7E067812E3885CD1").IsUnique();
+            entity.HasIndex(e => e.AffiliateProfileId, "IX_AffiliateProductLinks_AffiliateProfileId");
+
+            entity.HasIndex(e => e.ReferralCode, "UQ__Affiliat__7E06781221235705").IsUnique();
 
             entity.Property(e => e.LinkId).HasColumnName("LinkID");
             entity.Property(e => e.CreatedAt)
@@ -75,20 +81,22 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.AffiliateProductLinks)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__Affiliate__Affil__6383C8BA");
+                .HasConstraintName("FK__Affiliate__Affil__66603565");
 
             entity.HasOne(d => d.Product).WithMany(p => p.AffiliateProductLinks)
                 .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("FK__Affiliate__Produ__6477ECF3");
+                .HasConstraintName("FK__Affiliate__Produ__6754599E");
         });
 
         modelBuilder.Entity<AffiliateProfile>(entity =>
         {
-            entity.HasKey(e => e.AffiliateProfileId).HasName("PK__Affiliat__E898D6671B39B1CD");
+            entity.HasKey(e => e.AffiliateProfileId).HasName("PK__Affiliat__E898D667682F768B");
 
-            entity.HasIndex(e => e.UserId, "UQ__Affiliat__1788CCAD26F743C8").IsUnique();
+            entity.HasIndex(e => e.UserId, "IX_AffiliateProfiles_UserID");
 
-            entity.HasIndex(e => e.ReferralCode, "UQ__Affiliat__7E067812ED305E9E").IsUnique();
+            entity.HasIndex(e => e.UserId, "UQ__Affiliat__1788CCAD7F38DFB0").IsUnique();
+
+            entity.HasIndex(e => e.ReferralCode, "UQ__Affiliat__7E067812C895C884").IsUnique();
 
             entity.Property(e => e.AffiliateProfileId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.BankAccountNumber)
@@ -117,12 +125,14 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.User).WithOne(p => p.AffiliateProfile)
                 .HasForeignKey<AffiliateProfile>(d => d.UserId)
-                .HasConstraintName("FK__Affiliate__UserI__534D60F1");
+                .HasConstraintName("FK__Affiliate__UserI__5535A963");
         });
 
         modelBuilder.Entity<Brand>(entity =>
         {
-            entity.HasKey(e => e.BrandId).HasName("PK__Brands__DAD4F05E52D5A8E1");
+            entity.HasKey(e => e.BrandId).HasName("PK__Brands__DAD4F05E7B5D127A");
+
+            entity.HasIndex(e => e.Name, "IX_Brands_Name");
 
             entity.Property(e => e.BrandId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
@@ -137,7 +147,9 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B777DB4AC");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B5069032A");
+
+            entity.HasIndex(e => e.Name, "IX_Categories_Name");
 
             entity.Property(e => e.CategoryId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
@@ -152,9 +164,11 @@ public partial class ComedicShopDBContext : DbContext
 
         modelBuilder.Entity<ClickTracking>(entity =>
         {
-            entity.HasKey(e => e.ClickId).HasName("PK__ClickTra__F8E74E2E0E141C45");
+            entity.HasKey(e => e.ClickId).HasName("PK__ClickTra__F8E74E2E1C6589B8");
 
             entity.ToTable("ClickTracking");
+
+            entity.HasIndex(e => e.AffiliateProfileId, "IX_ClickTracking_AffiliateProfileId");
 
             entity.Property(e => e.ClickId).HasColumnName("ClickID");
             entity.Property(e => e.ClickedAt)
@@ -167,16 +181,20 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.ClickTrackings)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__ClickTrac__Affil__68487DD7");
+                .HasConstraintName("FK__ClickTrac__Affil__6B24EA82");
 
             entity.HasOne(d => d.Product).WithMany(p => p.ClickTrackings)
                 .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("FK__ClickTrac__Produ__693CA210");
+                .HasConstraintName("FK__ClickTrac__Produ__6C190EBB");
         });
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF297126D3");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF12D986EE");
+
+            entity.HasIndex(e => e.AffiliateProfileId, "IX_Orders_AffiliateProfileId");
+
+            entity.HasIndex(e => e.CustomerId, "IX_Orders_CustomerId");
 
             entity.Property(e => e.OrderId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.OrderDate)
@@ -185,24 +203,25 @@ public partial class ComedicShopDBContext : DbContext
             entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.PaymentStatus)
-                .HasMaxLength(50)
-                .IsUnicode(false);
             entity.Property(e => e.Status).HasDefaultValue(OrderStatus.Confirmed);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.AffiliateProfile).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.AffiliateProfileId)
-                .HasConstraintName("FK__Orders__Affiliat__59FA5E80");
+                .HasConstraintName("FK__Orders__Affiliat__5BE2A6F2");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Orders__Customer__59063A47");
+                .HasConstraintName("FK__Orders__Customer__5AEE82B9");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36CA4F09849");
+            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36C62438A3A");
+
+            entity.HasIndex(e => e.OrderId, "IX_OrderDetails_OrderId");
+
+            entity.HasIndex(e => e.ProductId, "IX_OrderDetails_ProductId");
 
             entity.Property(e => e.OrderDetailId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18, 2)");
@@ -210,16 +229,53 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("FK__OrderDeta__Order__5DCAEF64");
+                .HasConstraintName("FK__OrderDeta__Order__60A75C0F");
 
             entity.HasOne(d => d.Product).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("FK__OrderDeta__Produ__5EBF139D");
+                .HasConstraintName("FK__OrderDeta__Produ__619B8048");
+        });
+
+        modelBuilder.Entity<PaymentTransaction>(entity =>
+        {
+            entity.HasKey(e => e.PaymentTransactionId).HasName("PK__PaymentT__C22AEFE0C3E463AC");
+
+            entity.HasIndex(e => e.OrderId, "IX_PaymentTransactions_OrderId");
+
+            entity.HasIndex(e => e.OrderId, "UQ__PaymentT__C3905BCE4EFAFB58").IsUnique();
+
+            entity.Property(e => e.PaymentTransactionId).ValueGeneratedNever();
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.OrderInfo)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.RequestId)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ResponseTime)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.TransactionDate).HasColumnType("datetime");
+            entity.Property(e => e.TransactionId)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.Order).WithOne(p => p.PaymentTransaction)
+                .HasForeignKey<PaymentTransaction>(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PaymentTr__Order__75A278F5");
         });
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CDDDC7D065");
+            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CD4843F715");
+
+            entity.HasIndex(e => e.BrandId, "IX_Products_BrandId");
+
+            entity.HasIndex(e => e.CategoryId, "IX_Products_CategoryId");
 
             entity.Property(e => e.ProductId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CommissionRate).HasColumnType("decimal(5, 2)");
@@ -237,16 +293,20 @@ public partial class ComedicShopDBContext : DbContext
 
             entity.HasOne(d => d.Brand).WithMany(p => p.Products)
                 .HasForeignKey(d => d.BrandId)
-                .HasConstraintName("FK__Products__BrandI__49C3F6B7");
+                .HasConstraintName("FK__Products__BrandI__4BAC3F29");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Products)
                 .HasForeignKey(d => d.CategoryId)
-                .HasConstraintName("FK__Products__Catego__48CFD27E");
+                .HasConstraintName("FK__Products__Catego__4AB81AF0");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCAC1B940F71");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACCA09982C");
+
+            entity.HasIndex(e => e.Email, "IX_Users_Email");
+
+            entity.HasIndex(e => e.Email, "UQ__Users__A9D10534C86F289D").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.CreateAt)

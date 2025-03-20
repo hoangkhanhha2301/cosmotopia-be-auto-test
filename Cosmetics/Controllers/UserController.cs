@@ -191,7 +191,7 @@ namespace ComedicShopAPI.Controllers
 
             return Ok(new ApiResponse { Success = false, Message = "Invalid OTP or OTP has expired" });
         }
-        
+
         [HttpPost("register-affiliate")]
         public async Task<IActionResult> RegisterAffiliate([FromBody] RegisterAffiliateDto dto)
         {
@@ -208,16 +208,10 @@ namespace ComedicShopAPI.Controllers
                     return Unauthorized("User ID or RoleType not found in token.");
                 }
 
-
-            user.RoleType = AffiliateRole;
-            _unitOfWork.Users.UpdateAsync(user);
-            await _unitOfWork.CompleteAsync();
-
                 if (roleTypeClaim == "Customers")
                 {
                     roleTypeClaim = "3"; // Chuyển đổi nếu token chứa text thay vì số
                 }
-
 
                 if (!int.TryParse(userIdClaim, out var userId))
                 {
