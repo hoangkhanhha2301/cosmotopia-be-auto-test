@@ -22,7 +22,7 @@ namespace Cosmetics.Controllers
 
         [HttpGet]
         [Route("GetAllBrand")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetBrands([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             if (!ModelState.IsValid)
             {
@@ -34,13 +34,27 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var brands = await _unitOfWork.Brands.GetAllAsync();
-            var brandDTO = _mapper.Map<List<BrandDTO>>(brands);
-            return Ok(new ApiResponse
+           if(page < 1 || pageSize < 1)
             {
-                Success = true,
-                Data = brandDTO
-            });
+                return BadRequest("Page and pageSize must be greater than 0.");
+            }
+
+            var brands = await _unitOfWork.Brands.GetAllAsync();
+            var totalCount = brands.Count();
+            var paginationBrands = brands.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var brandDTO = _mapper.Map<List<BrandDTO>>(paginationBrands);
+
+            var response = new
+            {
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                CurrentPages = page,
+                PageSize = pageSize,
+                Brands = brandDTO
+            };
+
+            return Ok(response);
         }
 
         [HttpGet]

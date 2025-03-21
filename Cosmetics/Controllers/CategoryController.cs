@@ -1,15 +1,13 @@
 ﻿using AutoMapper;
 using Cosmetics.DTO.Category;
 using Cosmetics.DTO.User;
-using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Cosmetics.Repositories.UnitOfWork;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmetics.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
@@ -24,7 +22,7 @@ namespace Cosmetics.Controllers
 
         [HttpGet]
         [Route("GetAllCategory")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetCategories([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             if(!ModelState.IsValid)
             {
@@ -36,15 +34,27 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            var categories = await _unitOfWork.Categories.GetAllAsync();
-            var categoryDTO = _mapper.Map<List<CategoryDTO>>(categories);
-
-            return Ok(new ApiResponse 
+            if(page < 1 || pageSize < 1)
             {
-                Success = true,
-                StatusCode = StatusCodes.Status200OK,
-                Data = categoryDTO
-            });
+                return BadRequest("Page and pageSize must be greater than 0.");
+            }
+
+            var categories = await _unitOfWork.Categories.GetAllAsync();
+            var totalCount = categories.Count();
+            var paginationCategories = categories.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var categoryDTO = _mapper.Map<List<CategoryDTO>>(paginationCategories);
+
+            var response = new
+            {
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                CurrentPage = page,
+                PageSize = pageSize,
+                Categories = categoryDTO
+            };
+
+            return Ok(response);
         }
 
         [HttpGet]
