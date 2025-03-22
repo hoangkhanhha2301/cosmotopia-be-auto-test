@@ -24,9 +24,15 @@ namespace Cosmetics.Controllers
 
         [HttpGet]
         [Route("GetAllProduct")]
-        public async Task<IActionResult> GetAll(string search = null, int? page = null, int? pageSize = null, string sortBy = null)
+        public async Task<IActionResult> GetAll(
+    string search = null,
+    Guid? brandId = null,
+    Guid? categoryId = null,
+    int? page = null,
+    int? pageSize = null,
+    string sortBy = null)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiResponse
                 {
@@ -37,14 +43,15 @@ namespace Cosmetics.Controllers
             }
 
             var list = await _unitOfWork.Products.GetAllAsync();
-
             var totalCount = list.Count();
 
             page ??= 1;
             pageSize ??= 10;
 
             var products = await _unitOfWork.Products.GetAsync(
-                filter: p => string.IsNullOrEmpty(search) || p.Name.ToLower().Contains(search.ToLower()),
+                filter: p => (string.IsNullOrEmpty(search) || p.Name.ToLower().Contains(search.ToLower())) &&
+                            (!brandId.HasValue || p.BrandId == brandId) &&
+                            (!categoryId.HasValue || p.CategoryId == categoryId),
                 orderBy: sortBy switch
                 {
                     "price" => q => q.OrderBy(p => p.Price),
@@ -53,8 +60,7 @@ namespace Cosmetics.Controllers
                 page: page,
                 pageSize: pageSize,
                 includes: [p => p.Brand, p => p.Category]
-                );
-
+            );
 
             var productDTO = _mapper.Map<List<ProductDTO>>(products);
             var response = new
