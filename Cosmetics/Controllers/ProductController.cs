@@ -54,7 +54,9 @@ namespace Cosmetics.Controllers
                             (!categoryId.HasValue || p.CategoryId == categoryId),
                 orderBy: sortBy switch
                 {
-                    "price" => q => q.OrderBy(p => p.Price),
+                    "a" => q => q.OrderBy(p => p.Price),
+                    "d" => q => q.OrderByDescending(p => p.Price),
+                    "price" => q => q.OrderBy(p => p.Price), // Keep original as default price sorting (ascending)
                     _ => q => q.OrderBy(p => p.ProductId),
                 },
                 page: page,
