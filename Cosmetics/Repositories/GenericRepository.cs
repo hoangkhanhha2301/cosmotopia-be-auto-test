@@ -36,6 +36,11 @@ namespace Cosmetics.Repositories
             await _dbSet.AddAsync(entity);
         }
 
+        public async Task AddRangeAsync(IEnumerable<T> entities)
+        {
+            await _dbSet.AddRangeAsync(entities);
+        }
+
         public async Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);

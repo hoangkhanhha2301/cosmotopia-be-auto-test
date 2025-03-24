@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Cosmetics.Models;
+using System.Linq.Expressions;
 
 namespace Cosmetics.Interfaces
 {
@@ -6,6 +7,7 @@ namespace Cosmetics.Interfaces
     {
         Task<IEnumerable<T>> GetAllAsync();
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
+        Task AddRangeAsync(IEnumerable<T> entity);
         Task<T> GetByIdAsync<Tid>(Tid id);
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);

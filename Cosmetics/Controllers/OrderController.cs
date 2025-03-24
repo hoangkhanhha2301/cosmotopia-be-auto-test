@@ -1,5 +1,6 @@
 ﻿using Cosmetics.DTO.Order;
 using Cosmetics.DTO.OrderDetail;
+using Cosmetics.Enum;
 using Cosmetics.Models;
 using Cosmetics.Repositories.UnitOfWork;
 using Microsoft.AspNetCore.Authorization;
@@ -67,25 +68,81 @@ namespace Cosmetics.Controllers
             return Ok(response);
         }
 
+        // Ensure this is included
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDTO dto)
         {
-            var order = new Order
-            {
-                OrderId = Guid.NewGuid(),
-                CustomerId = dto.CustomerId,
-                SalesStaffId = dto.SalesStaffId,
-                AffiliateProfileId = dto.AffiliateProfileId,
-                TotalAmount = dto.TotalAmount,
-                Status = dto.Status,
-                OrderDate = dto.OrderDate ?? DateTime.UtcNow,
-                PaymentMethod = dto.PaymentMethod
-            };
+            if (dto == null || dto.OrderDetails == null || !dto.OrderDetails.Any())
+                return BadRequest("Order must contain at least one item.");
 
-            await _unitOfWork.Orders.AddAsync(order);
-            await _unitOfWork.CompleteAsync();
-            return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, order);
+            // Extract UserID from the authenticated user (same as GetOrdersByUser)
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized("User is not authenticated.");
+
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+                return BadRequest("Invalid user ID.");
+
+            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            {
+                try
+                {
+                    var order = new Order
+                    {
+                        OrderId = Guid.NewGuid(),
+                        CustomerId = userId, // Maps to UserID in Users table
+                        SalesStaffId = dto.SalesStaffId,
+                        TotalAmount = 0,
+                        Status = OrderStatus.Confirmed,
+                        OrderDate = DateTime.UtcNow,
+                        PaymentMethod = dto.PaymentMethod
+                    };
+
+                    var orderDetails = new List<OrderDetail>();
+                    foreach (var detailDto in dto.OrderDetails)
+                    {
+                        var product = await _unitOfWork.Products.GetByIdAsync(detailDto.ProductId.Value);
+                        if (product == null)
+                            return NotFound($"Product with ID {detailDto.ProductId} not found.");
+
+                        if (product.StockQuantity < detailDto.Quantity)
+                            return BadRequest($"Insufficient stock for product {product.Name}. Available: {product.StockQuantity}, Requested: {detailDto.Quantity}");
+
+                        product.StockQuantity -= detailDto.Quantity;
+                        _unitOfWork.Products.UpdateAsync(product);
+
+                        decimal unitPrice = product.Price;
+                        decimal commissionRate = product.CommissionRate/100  ?? 0;
+                        decimal commissionAmount = commissionRate *  unitPrice * detailDto.Quantity;
+
+                        orderDetails.Add(new OrderDetail
+                        {
+                            OrderId = order.OrderId,
+                            ProductId = detailDto.ProductId.Value,
+                            Quantity = detailDto.Quantity,
+                            UnitPrice = unitPrice,
+                            CommissionAmount = commissionAmount
+                        });
+                    }
+
+                    order.TotalAmount = orderDetails.Sum(od => od.Quantity * od.UnitPrice);
+
+                    await _unitOfWork.Orders.AddAsync(order);
+                    await _unitOfWork.OrderDetails.AddRangeAsync(orderDetails);
+                    await _unitOfWork.CompleteAsync();
+
+                    await _unitOfWork.CommitAsync(transaction);
+
+                    return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, order);
+                }
+                catch (Exception ex)
+                {
+                    await _unitOfWork.RollbackAsync(transaction);
+                    return StatusCode(500, $"An error occurred: {ex.Message}");
+                }
+            }
         }
 
         [HttpPut("{id}")]

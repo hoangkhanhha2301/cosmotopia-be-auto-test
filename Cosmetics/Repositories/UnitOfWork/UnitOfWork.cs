@@ -1,6 +1,7 @@
 ﻿using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Cosmetics.Repositories.UnitOfWork
 {
@@ -48,6 +49,22 @@ namespace Cosmetics.Repositories.UnitOfWork
         }
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _context.Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitAsync(IDbContextTransaction transaction)
+        {
+            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+            await transaction.CommitAsync();
+        }
+
+        public async Task RollbackAsync(IDbContextTransaction transaction)
+        {
+            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+            await transaction.RollbackAsync();
+        }
 
         public void Dispose() => _context.Dispose();
     }
