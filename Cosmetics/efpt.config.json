@@ -31,6 +31,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[CartDetails]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Categories]",
          "ObjectType": 0
       },
@@ -52,6 +56,10 @@
       },
       {
          "Name": "[dbo].[Products]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TransactionAffiliates]",
          "ObjectType": 0
       },
       {

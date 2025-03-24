@@ -19,5 +19,7 @@ public partial class AffiliateProductLink
 
     public virtual AffiliateProfile AffiliateProfile { get; set; }
 
+    public virtual ICollection<ClickTracking> ClickTrackings { get; set; } = new List<ClickTracking>();
+
     public virtual Product Product { get; set; }
 }

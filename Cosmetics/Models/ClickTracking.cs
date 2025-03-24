@@ -9,15 +9,17 @@ public partial class ClickTracking
 {
     public int ClickId { get; set; }
 
-    public Guid AffiliateProfileId { get; set; }
+    public int LinkId { get; set; }
 
-    public Guid ProductId { get; set; }
+    public int UserId { get; set; }
 
     public string ReferralCode { get; set; }
 
     public DateTime? ClickedAt { get; set; }
 
-    public virtual AffiliateProfile AffiliateProfile { get; set; }
+    public int? ClickCount { get; set; }
 
-    public virtual Product Product { get; set; }
+    public virtual AffiliateProductLink Link { get; set; }
+
+    public virtual User User { get; set; }
 }

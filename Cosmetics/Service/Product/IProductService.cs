@@ -11,6 +11,6 @@ public interface IProductService
     Task<List<Product>> GetProductsByBrandAsync(Guid brandId);
     Task<bool> IsPremiumBrandAsync(Guid productId);
     Task<decimal> GetCommissionRateAsync(Guid productId);
-    Task<List<Product>> GetTopPerformingProductsAsync(Guid affiliateProfileId, int topCount = 5); // Sửa thành Guid
+    //Task<List<Product>> GetTopPerformingProductsAsync(Guid affiliateProfileId, int topCount = 5); // Sửa thành Guid
     Task<bool> UpdateStockQuantityAsync(Guid productId, int quantity);
 }

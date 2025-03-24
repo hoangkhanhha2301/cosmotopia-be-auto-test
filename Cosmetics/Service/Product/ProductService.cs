@@ -65,32 +65,32 @@ public class ProductService : IProductService
         return isPremium ? 5.0m : 2.0m; // 5% cho Premium, 2% cho không Premium
     }
 
-    public async Task<List<Product>> GetTopPerformingProductsAsync(Guid affiliateProfileId, int topCount = 5)
-    {
-        var topProducts = await _context.AffiliateCommissions
-            .Where(ac => ac.AffiliateProfileId == affiliateProfileId)
-            .Join(_context.OrderDetails,
-                ac => ac.OrderDetailId, // Sửa thành OrderDetailId
-                od => od.OrderDetailId,
-                (ac, od) => new { ac, od })
-            .GroupBy(x => x.od.ProductId)
-            .Select(g => new
-            {
-                ProductId = g.Key,
-                TotalRevenue = g.Sum(x => x.ac.CommissionAmount),
-                TotalClicks = _context.ClickTrackings
-                    .Count(ct => ct.AffiliateProfileId == affiliateProfileId && ct.ProductId == g.Key)
-            })
-            .OrderByDescending(x => x.TotalRevenue)
-            .Take(topCount)
-            .Join(_context.Products,
-                x => x.ProductId,
-                p => p.ProductId,
-                (x, p) => p)
-            .ToListAsync();
+    //public async Task<List<Product>> GetTopPerformingProductsAsync(Guid affiliateProfileId, int topCount = 5)
+    //{
+    //    var topProducts = await _context.AffiliateCommissions
+    //        .Where(ac => ac.AffiliateProfileId == affiliateProfileId)
+    //        .Join(_context.OrderDetails,
+    //            ac => ac.OrderDetailId, // Sửa thành OrderDetailId
+    //            od => od.OrderDetailId,
+    //            (ac, od) => new { ac, od })
+    //        .GroupBy(x => x.od.ProductId)
+    //        .Select(g => new
+    //        {
+    //            //ProductId = g.Key,
+    //            //TotalRevenue = g.Sum(x => x.ac.CommissionAmount),
+    //            //TotalClicks = _context.ClickTrackings
+    //            //    .Count(ct => ct.AffiliateProfileId == affiliateProfileId && ct.ProductId == g.Key)
+    //        })
+    //        .OrderByDescending(x => x.TotalRevenue)
+    //        .Take(topCount)
+    //        .Join(_context.Products,
+    //            x => x.ProductId,
+    //            p => p.ProductId,
+    //            (x, p) => p)
+    //        .ToListAsync();
 
-        return topProducts;
-    }
+    //    return topProducts;
+    //}
 
     public async Task<bool> UpdateStockQuantityAsync(Guid productId, int quantity)
     {

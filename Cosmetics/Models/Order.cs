@@ -24,6 +24,8 @@ public partial class Order
 
     public string PaymentMethod { get; set; }
 
+    public string Address { get; set; }
+
     public virtual AffiliateProfile AffiliateProfile { get; set; }
 
     public virtual User Customer { get; set; }
