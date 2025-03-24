@@ -19,8 +19,9 @@ namespace Cosmetics.Repositories.UnitOfWork
         IUserRepository Users { get; }
         IAffiliateProfileRepository AffiliateProfiles { get; }
         IPaymentTransactionRepository PaymentTransactions { get; }
+        ICartDetailRepository CartDetails { get; }
 
-        
+
 
         //IAffiliateLinkRepository AffiliateLinks { get; }
     }
