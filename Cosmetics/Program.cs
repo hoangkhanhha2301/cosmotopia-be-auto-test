@@ -18,6 +18,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 // JWT Configuration
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5192); // Cho phép HTTP
+    options.ListenAnyIP(7191, listenOptions => listenOptions.UseHttps()); // Cho phép HTTPS
+});
 builder.Services.Configure<AppSetting>(builder.Configuration.GetSection("AppSettings"));
 var secretKey = builder.Configuration["AppSettings:SecretKey"];
 var secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
@@ -50,7 +55,7 @@ builder.Services.AddCors(opts =>
 {
     opts.AddPolicy("corspolicy", build =>
     {
-        build.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+        build.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
@@ -170,12 +175,13 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure middleware, static files, authentication, authorization, etc.
-app.UseSwagger();
-app.UseSwaggerUI();
 
-app.UseCors("corspolicy");
+    app.UseCors("corspolicy");
+//app.UseHttpsRedirection();
+//app.UseSwagger();
+//app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -184,7 +190,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
