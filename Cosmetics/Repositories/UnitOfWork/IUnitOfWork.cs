@@ -1,5 +1,6 @@
 ﻿using Cosmetics.Interfaces;
 using Cosmetics.Models;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Cosmetics.Repositories.UnitOfWork
 {
@@ -7,6 +8,10 @@ namespace Cosmetics.Repositories.UnitOfWork
     {
         IOrderRepository Orders { get; }
         Task<int> CompleteAsync();
+
+        Task<IDbContextTransaction> BeginTransactionAsync();
+        Task CommitAsync(IDbContextTransaction transaction);
+        Task RollbackAsync(IDbContextTransaction transaction);
         IOrderDetailRepository OrderDetails { get; }
         IBrandRepository Brands { get; }
         ICategoryRepository Categories { get; }
