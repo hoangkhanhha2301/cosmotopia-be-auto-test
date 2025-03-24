@@ -18,6 +18,7 @@ namespace Cosmetics.DTO.Order
 
         public DateTime? OrderDate { get; set; }
         public string PaymentMethod { get; set; }
+        public string Address { get; set; }
         public List<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
         public List<PaymentTransactionDTO> PaymentTransactions { get; set; } = new List<PaymentTransactionDTO>();
     }
