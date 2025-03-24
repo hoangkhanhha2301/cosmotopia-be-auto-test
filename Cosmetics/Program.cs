@@ -4,7 +4,7 @@ using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Cosmetics.Repositories;
 using Cosmetics.Repositories.UnitOfWork;
-using Cosmetics.Service.Affiliate;
+//using Cosmetics.Service.Affiliate;
 using Cosmetics.Service.OTP;
 using Cosmetics.Service.Payment;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -159,7 +159,7 @@ builder.Services.AddScoped<IPaymentService, VNPayService>(sp =>
 //Add Services
 builder.Services.AddHostedService<ExpiredOtpCleanerService>();
 // Đăng ký IAffiliateService với AffiliateService
-builder.Services.AddScoped<IAffiliateService, AffiliateService>();
+//builder.Services.AddScoped<IAffiliateService, AffiliateService>();
 
 // Đăng ký IProductService (nếu đã có ProductService)
 builder.Services.AddScoped<IProductService, ProductService>();

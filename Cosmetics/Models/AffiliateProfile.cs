@@ -19,6 +19,8 @@ public partial class AffiliateProfile
 
     public decimal? TotalEarnings { get; set; }
 
+    public decimal? Ballance { get; set; }
+
     public decimal? PendingAmount { get; set; }
 
     public decimal? WithdrawnAmount { get; set; }
@@ -31,9 +33,9 @@ public partial class AffiliateProfile
 
     public virtual ICollection<AffiliateProductLink> AffiliateProductLinks { get; set; } = new List<AffiliateProductLink>();
 
-    public virtual ICollection<ClickTracking> ClickTrackings { get; set; } = new List<ClickTracking>();
-
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    public virtual ICollection<TransactionAffiliate> TransactionAffiliates { get; set; } = new List<TransactionAffiliate>();
 
     public virtual User User { get; set; }
 }

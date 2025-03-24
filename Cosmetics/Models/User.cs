@@ -37,5 +37,9 @@ public partial class User
 
     public virtual AffiliateProfile AffiliateProfile { get; set; }
 
+    public virtual ICollection<CartDetail> CartDetails { get; set; } = new List<CartDetail>();
+
+    public virtual ClickTracking ClickTracking { get; set; }
+
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

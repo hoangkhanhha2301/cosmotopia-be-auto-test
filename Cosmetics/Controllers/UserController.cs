@@ -15,7 +15,7 @@ using Cosmetics.Service.OTP;
 using Cosmetics.DTO.User.Admin;
 using Cosmetics.Repositories.UnitOfWork;
 using Cosmetics.DTO.Affiliate;
-using Cosmetics.Service.Affiliate;
+//using Cosmetics.Service.Affiliate;
 
 namespace ComedicShopAPI.Controllers
 {
@@ -27,17 +27,17 @@ namespace ComedicShopAPI.Controllers
         private readonly AppSetting _appSettings;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
-        private readonly IAffiliateService _affiliateService;
+        //private readonly IAffiliateService _affiliateService;
         private readonly ComedicShopDBContext _context;
 
 
-        public UserController(ComedicShopDBContext context,IUnitOfWork unitOfWork, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService, IAffiliateService affiliateService)
+        public UserController(ComedicShopDBContext context,IUnitOfWork unitOfWork, IOptionsMonitor<AppSetting> optionsMonitor, IMapper mapper, IEmailService emailService/* IAffiliateService affiliateService*/)
         {
             _unitOfWork = unitOfWork;
             _appSettings = optionsMonitor.CurrentValue;
             _mapper = mapper;
             _emailService = emailService;
-            _affiliateService = affiliateService;
+            //_affiliateService = affiliateService;
             _context = context;
         }
 
@@ -229,11 +229,11 @@ namespace ComedicShopAPI.Controllers
                 }
 
                 // Kiểm tra user đã là affiliate chưa
-                var existingAffiliate = await _affiliateService.GetAffiliateProfile(userId);
-                if (existingAffiliate != null)
-                {
-                    return BadRequest("You are already an affiliate.");
-                }
+                //var existingAffiliate = await _affiliateService.GetAffiliateProfile(userId);
+                //if (existingAffiliate != null)
+                //{
+                //    return BadRequest("You are already an affiliate.");
+                //}
 
 
                 // Tạo mã giới thiệu (Referral Code)
@@ -263,10 +263,10 @@ namespace ComedicShopAPI.Controllers
                     try
                     {
                         // Gọi RegisterAffiliate với đúng kiểu dữ liệu
-                        await _affiliateService.RegisterAffiliate(dto, userId);
+                        //await _affiliateService.RegisterAffiliate(dto, userId);
 
-                        // Cập nhật Role của user từ 3 (Customer) -> 2 (Affiliate)
-                        await _affiliateService.UpdateUserRole(userId, 2);
+                        //// Cập nhật Role của user từ 3 (Customer) -> 2 (Affiliate)
+                        //await _affiliateService.UpdateUserRole(userId, 2);
 
                         await transaction.CommitAsync();
                     }
