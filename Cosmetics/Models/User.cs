@@ -39,7 +39,7 @@ public partial class User
 
     public virtual ICollection<CartDetail> CartDetails { get; set; } = new List<CartDetail>();
 
-    public virtual ClickTracking ClickTracking { get; set; }
+    public virtual ICollection<ClickTracking> ClickTrackings { get; set; } = new List<ClickTracking>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

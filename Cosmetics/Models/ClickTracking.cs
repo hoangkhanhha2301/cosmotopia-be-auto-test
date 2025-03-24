@@ -11,7 +11,9 @@ public partial class ClickTracking
 
     public int LinkId { get; set; }
 
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
+
+    public int? Count { get; set; }
 
     public string ReferralCode { get; set; }
 
