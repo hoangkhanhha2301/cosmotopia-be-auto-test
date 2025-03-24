@@ -6,6 +6,7 @@ namespace Cosmetics.Service.Payment
     {
         Task<string> CreatePaymentUrlAsync(PaymentRequestDTO request);
         Task<bool> HandlePaymentResponseAsync(PaymentResponseDTO response);
-        Task<PaymentTransactionDTO> GetPaymentByTransactionIdAsync(string transactionId);
+        Task<PaymentResponseDTO> GetPaymentByTransactionIdAsync(string transactionId);
+        Task<bool> UpdatePaymentStatusAsync(PaymentResponseDTO payment);
     }
 }

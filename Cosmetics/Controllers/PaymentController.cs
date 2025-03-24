@@ -118,5 +118,41 @@ namespace Cosmetics.Controllers
                 return StatusCode(500, $"An error occurred while retrieving the payment: {ex.Message}");
             }
         }
+        [HttpPut("update-payment-status/{transactionId}")]
+        public async Task<IActionResult> UpdatePaymentStatus(string transactionId)
+        {
+            if (string.IsNullOrEmpty(transactionId))
+                return BadRequest("Transaction ID is required");
+
+            try
+            {
+                var payment = await _paymentService.GetPaymentByTransactionIdAsync(transactionId);
+                if (payment == null)
+                    return NotFound($"No payment found with Transaction ID: {transactionId}");
+
+                if (payment.Status != PaymentStatus.Pending)
+                    return BadRequest($"Payment status can only be updated from Pending (0) to Processing (1). Current status: {payment.Status}");
+
+                var updatedPayment = new PaymentResponseDTO
+                {
+                    TransactionId = payment.TransactionId,
+                    Amount = payment.Amount,
+                    ResultCode = payment.ResultCode, // No CS1061 error now
+                    ResponseTime = payment.ResponseTime, // No CS1061 error now
+                    Status = PaymentStatus.Success
+                };
+
+                var success = await _paymentService.UpdatePaymentStatusAsync(updatedPayment);
+                if (!success)
+                    return BadRequest("Failed to update payment status");
+
+                return Ok(new { Message = $"Payment status updated successfully for Transaction ID: {transactionId}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while updating the payment status: {ex.Message}");
+            }
+        }
     }
+
 }
