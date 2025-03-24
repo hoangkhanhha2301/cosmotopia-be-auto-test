@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Cosmetics.Utilities; // Namespace của VnPayLibrary
+using Cosmetics.Utilities;
+using System.Globalization; // Namespace của VnPayLibrary
 
 namespace Cosmetics.Service.Payment
 {
@@ -125,23 +126,44 @@ namespace Cosmetics.Service.Payment
             return true;
         }
 
-        public async Task<PaymentTransactionDTO> GetPaymentByTransactionIdAsync(string transactionId)
+        public async Task<PaymentResponseDTO> GetPaymentByTransactionIdAsync(string transactionId)
         {
-            var transaction = await _unitOfWork.PaymentTransactions.GetByTransactionIdAsync(transactionId);
-            if (transaction == null)
+            var paymentEntity = await _unitOfWork.PaymentTransactions.GetByTransactionIdAsync(transactionId);
+            if (paymentEntity == null)
                 return null;
 
-            return new PaymentTransactionDTO
+            return new PaymentResponseDTO
             {
-                PaymentTransactionId = transaction.PaymentTransactionId,
-                OrderId = transaction.OrderId,
-                PaymentMethod = transaction.PaymentMethod,
-                TransactionId = transaction.TransactionId,
-                RequestId = transaction.RequestId,
-                Amount = transaction.Amount,
-                Status = transaction.Status,
-                TransactionDate = transaction.TransactionDate
+                TransactionId = paymentEntity.TransactionId,
+                Amount = paymentEntity.Amount,
+                Status = paymentEntity.Status,
+                ResultCode = paymentEntity.ResultCode.HasValue ? paymentEntity.ResultCode.Value : 0, // Default to 0 if null
+                ResponseTime = string.IsNullOrEmpty(paymentEntity.ResponseTime)
+                    ? DateTime.UtcNow // Default to current time if null
+                    : DateTime.ParseExact(paymentEntity.ResponseTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
             };
         }
+
+        public async Task<bool> UpdatePaymentStatusAsync(PaymentResponseDTO payment)
+    {
+        if (payment == null)
+            throw new ArgumentNullException(nameof(payment));
+
+        // Fetch the existing payment entity
+        var paymentEntity = await _unitOfWork.PaymentTransactions.GetByTransactionIdAsync(payment.TransactionId);
+        if (paymentEntity == null)
+            return false;
+
+        // Update the status
+        paymentEntity.Status = payment.Status;
+
+        // Save changes via UnitOfWork
+        _unitOfWork.PaymentTransactions.UpdateAsync(paymentEntity);
+        await _unitOfWork.CompleteAsync();
+
+        return true;
+    }
+
+        
     }
 }

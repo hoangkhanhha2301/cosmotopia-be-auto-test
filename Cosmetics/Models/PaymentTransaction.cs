@@ -26,9 +26,9 @@ public partial class PaymentTransaction
 
     public int? ResultCode { get; set; }
 
-    public string ResponseTime { get; set; }
+    public string? ResponseTime { get; set; }
 
-    public string OrderInfo { get; set; }
+    public string? OrderInfo { get; set; }
 
     public virtual Order Order { get; set; }
 }
