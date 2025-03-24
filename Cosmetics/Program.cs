@@ -145,6 +145,7 @@ builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAffiliateProfileRepository, AffiliateProfileRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+builder.Services.AddScoped<ICartDetailRepository, CartDetailRepository>();
 
 //VNPay
 builder.Services.AddScoped<IPaymentService, VNPayService>(sp =>
