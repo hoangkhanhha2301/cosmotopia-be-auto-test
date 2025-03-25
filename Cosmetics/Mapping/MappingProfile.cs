@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Cosmetics.DTO.Affiliate;
 using Cosmetics.DTO.Brand;
+using Cosmetics.DTO.Cart;
 using Cosmetics.DTO.Category;
 using Cosmetics.DTO.Order;
 using Cosmetics.DTO.OrderDetail;
@@ -46,12 +47,22 @@ namespace Cosmetics.Mapping
             CreateMap<PaymentTransaction, PaymentRequestDTO>().ReverseMap();
             CreateMap<PaymentTransaction, PaymentResponseDTO>().ReverseMap();
 
+
             // Affiliate
             CreateMap<AffiliateProfile, AffiliateProfileDto>().ReverseMap();
             CreateMap<AffiliateProductLink, AffiliateLinkDto>().ReverseMap();
             CreateMap<TransactionAffiliate, WithdrawalResponseDto>()
                 .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.TransactionAffiliatesId))
                 .ReverseMap();
+=======
+            CreateMap<AffiliateProfile, AffiliateIncomeDto>().ReverseMap();
+            CreateMap<AffiliateProfile, GenerateAffiliateLinkDto>().ReverseMap();
+            CreateMap<AffiliateProfile, RegisterAffiliateDto>().ReverseMap();
+            CreateMap<AffiliateProfile, TopProductDto>().ReverseMap();
+            //Cart
+            CreateMap<CartDetail, CartDetailDTO>().ReverseMap();
+            CreateMap<CartDetail, CartDetailInputDTO>().ReverseMap();
+
 
         }
     }

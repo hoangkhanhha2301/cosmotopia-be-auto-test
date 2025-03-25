@@ -8,6 +8,8 @@ namespace Cosmetics.DTO.Order
         public int? SalesStaffId { get; set; }
         public DateTime? OrderDate { get; set; }
         public string PaymentMethod { get; set; }
+
+        public string Address { get; set; }
         public List<OrderDetailCreateDTO> OrderDetails { get; set; }
     }
 

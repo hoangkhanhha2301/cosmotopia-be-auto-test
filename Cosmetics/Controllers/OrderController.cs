@@ -46,6 +46,7 @@ namespace Cosmetics.Controllers
                     Status = order.Status,
                     OrderDate = order.OrderDate,
                     PaymentMethod = order.PaymentMethod,
+                    Address = order.Address,
                     OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
                     {
                         OrderDetailId = od.OrderDetailId,
@@ -97,7 +98,8 @@ namespace Cosmetics.Controllers
                         TotalAmount = 0,
                         Status = OrderStatus.Confirmed,
                         OrderDate = DateTime.UtcNow,
-                        PaymentMethod = dto.PaymentMethod
+                        PaymentMethod = dto.PaymentMethod,
+                        Address = dto.Address
                     };
 
                     var orderDetails = new List<OrderDetail>();
@@ -161,6 +163,7 @@ namespace Cosmetics.Controllers
             order.Status = dto.Status;
             order.OrderDate = dto.OrderDate;
             order.PaymentMethod = dto.PaymentMethod;
+            order.Address = dto.Address;
 
             _unitOfWork.Orders.UpdateAsync(order);
             await _unitOfWork.CompleteAsync();
@@ -185,6 +188,7 @@ namespace Cosmetics.Controllers
                 Status = order.Status,
                 OrderDate = order.OrderDate,
                 PaymentMethod = order.PaymentMethod,
+                Address = order.Address,
                 OrderDetails = order.OrderDetails.Select(od => new OrderDetailDTO
                 {
                     OrderDetailId = od.OrderDetailId,
@@ -253,6 +257,7 @@ namespace Cosmetics.Controllers
                     Status = order.Status,
                     OrderDate = order.OrderDate,
                     PaymentMethod = order.PaymentMethod,
+                    Address = order.Address,
                     OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
                     {
                         OrderDetailId = od.OrderDetailId,
