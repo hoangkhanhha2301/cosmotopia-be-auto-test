@@ -14,10 +14,12 @@ namespace Cosmetics.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ComedicShopDBContext _context;
 
-        public OrderController(IUnitOfWork unitOfWork)
+        public OrderController(IUnitOfWork unitOfWork, ComedicShopDBContext context)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         [HttpGet]
@@ -269,6 +271,61 @@ namespace Cosmetics.Controllers
                         UnitPrice = od.UnitPrice
                     }).ToList() ?? new List<OrderDetailDTO>()
                 }).ToList();
+
+            var response = new
+            {
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                CurrentPage = page,
+                PageSize = pageSize,
+                Orders = paginatedOrders
+            };
+
+            return Ok(response);
+        }
+        [HttpGet("shipper-confirmed-paid")]
+        //[Authorize(Roles = "Shipper")]
+        public async Task<IActionResult> GetConfirmedPaidOrdersForShipper([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            if (page < 1 || pageSize < 1)
+            {
+                return BadRequest("Page and pageSize must be greater than 0.");
+            }
+
+            var orders = await _unitOfWork.Orders.GetConfirmedPaidOrdersForShipperAsync(page, pageSize);
+            if (!orders.Any())
+            {
+                return NotFound("No confirmed and paid orders found for shipping.");
+            }
+
+            var totalCount = await _unitOfWork.Orders.CountAsync(
+                filter: o => o.Status == OrderStatus.Confirmed
+                          && _context.PaymentTransactions.Any(pt => pt.OrderId == o.OrderId && pt.Status == PaymentStatus.Success)
+            );
+
+            var paginatedOrders = orders.Select(order => new OrderResponseDTO
+            {
+                OrderId = order.OrderId,
+                CustomerId = order.CustomerId,
+                CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
+                SalesStaffId = order.SalesStaffId,
+                AffiliateProfileId = order.AffiliateProfileId,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                OrderDate = order.OrderDate,
+                PaymentMethod = order.PaymentMethod,
+                Address = order.Address,
+                OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
+                {
+                    OrderDetailId = od.OrderDetailId,
+                    OrderId = od.OrderId,
+                    ProductId = od.ProductId,
+                    Name = od.Product.Name,
+                    ImageUrl = od.Product.ImageUrls,
+                    Quantity = od.Quantity,
+                    UnitPrice = od.UnitPrice
+                }).ToList() ?? new List<OrderDetailDTO>()
+            }).ToList();
 
             var response = new
             {

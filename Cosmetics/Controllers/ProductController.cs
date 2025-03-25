@@ -6,6 +6,7 @@ using Cosmetics.DTO.User;
 using Cosmetics.Models;
 using Cosmetics.Repositories.UnitOfWork;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cosmetics.Controllers
 {
@@ -50,18 +51,22 @@ namespace Cosmetics.Controllers
 
             var products = await _unitOfWork.Products.GetAsync(
                 filter: p => (string.IsNullOrEmpty(search) || p.Name.ToLower().Contains(search.ToLower())) &&
-                            (!brandId.HasValue || p.BrandId == brandId) &&
-                            (!categoryId.HasValue || p.CategoryId == categoryId),
+                             (!brandId.HasValue || p.BrandId == brandId) &&
+                             (!categoryId.HasValue || p.CategoryId == categoryId),
                 orderBy: sortBy switch
                 {
                     "a" => q => q.OrderBy(p => p.Price),
                     "d" => q => q.OrderByDescending(p => p.Price),
-                    "price" => q => q.OrderBy(p => p.Price), // Keep original as default price sorting (ascending)
+                    "price" => q => q.OrderBy(p => p.Price),
                     _ => q => q.OrderBy(p => p.ProductId),
                 },
                 page: page,
                 pageSize: pageSize,
-                includes: [p => p.Brand, p => p.Category]
+                includeOperations: new Func<IQueryable<Product>, IQueryable<Product>>[]
+                {
+            q => q.Include(p => p.Brand),
+            q => q.Include(p => p.Category)
+                }
             );
 
             var productDTO = _mapper.Map<List<ProductDTO>>(products);
@@ -81,7 +86,7 @@ namespace Cosmetics.Controllers
         [Route("GetProductBy/{id:guid}")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiResponse
                 {
@@ -93,12 +98,16 @@ namespace Cosmetics.Controllers
 
             var products = await _unitOfWork.Products.GetAsync(
                 filter: p => p.ProductId == id,
-                includes: [p => p.Brand, p => p.Category]
-                );
+                includeOperations: new Func<IQueryable<Product>, IQueryable<Product>>[]
+                {
+            q => q.Include(p => p.Brand),
+            q => q.Include(p => p.Category)
+                }
+            );
 
             var product = products.FirstOrDefault();
 
-            if(product == null)
+            if (product == null)
             {
                 return Ok(new ApiResponse
                 {
@@ -108,8 +117,8 @@ namespace Cosmetics.Controllers
                 });
             }
 
-            return Ok(new ApiResponse 
-            { 
+            return Ok(new ApiResponse
+            {
                 Success = true,
                 StatusCode = StatusCodes.Status200OK,
                 Data = _mapper.Map<ProductDTO>(product)

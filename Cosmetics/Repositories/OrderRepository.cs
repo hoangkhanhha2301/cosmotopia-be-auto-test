@@ -1,4 +1,5 @@
-﻿using Cosmetics.Interfaces;
+﻿using Cosmetics.Enum;
+using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,20 @@ namespace Cosmetics.Repositories
             }
 
             return await query.FirstOrDefaultAsync(o => o.OrderId == id);
+        }
+        public async Task<IEnumerable<Order>> GetConfirmedPaidOrdersForShipperAsync(int page, int pageSize)
+        {
+            return await GetAsync(
+                filter: o => o.Status == OrderStatus.Confirmed
+                          && _context.PaymentTransactions.Any(pt => pt.OrderId == o.OrderId && pt.Status == PaymentStatus.Success),
+                includeOperations: new Func<IQueryable<Order>, IQueryable<Order>>[]
+                {
+                    q => q.Include(o => o.OrderDetails).ThenInclude(od => od.Product),
+                    q => q.Include(o => o.Customer)
+                },
+                page: page,
+                pageSize: pageSize
+            );
         }
     }
 
