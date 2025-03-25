@@ -82,9 +82,10 @@ namespace Cosmetics.Controllers
         }
 
         [HttpPost("withdraw")]
+        [Authorize(Roles = "Affiliates")]
         public async Task<IActionResult> RequestWithdrawal([FromBody] WithdrawalRequestDto request)
         {
-            var userId = int.Parse(User.FindFirst("UserId")?.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("User not authenticated."));
             var result = await _affiliateService.RequestWithdrawalAsync(userId, request);
             return Ok(result);
         }

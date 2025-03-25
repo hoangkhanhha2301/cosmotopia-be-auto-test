@@ -19,5 +19,9 @@ namespace Cosmetics.Repositories.Interface
         Task<ClickTracking> GetClickTrackingByReferralCodeAsync(string referralCode, int? userId);
 
         Task AddClickTrackingAsync(ClickTracking clickTracking);
+
+        Task<TransactionAffiliate> CreateTransactionAsync(TransactionAffiliate transaction); // Đã có sẵn
+
+        Task UpdateAffiliateProfileAsync(AffiliateProfile profile); // Đã có sẵn
     }
 }

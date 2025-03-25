@@ -1,4 +1,5 @@
-﻿using Cosmetics.DTO.Affiliate;
+﻿using AutoMapper;
+using Cosmetics.DTO.Affiliate;
 using Cosmetics.Enum;
 using Cosmetics.Models;
 using Cosmetics.Repositories.Interface;
@@ -11,11 +12,13 @@ namespace Cosmetics.Service.Affiliate
     {
         private readonly IAffiliateRepository _affiliateRepository;
         private readonly ComedicShopDBContext _context;
+        private readonly IMapper _mapper;
 
-        public AffiliateService(IAffiliateRepository affiliateRepository, ComedicShopDBContext context)
+        public AffiliateService(IAffiliateRepository affiliateRepository, ComedicShopDBContext context, IMapper mapper)
         {
             _affiliateRepository = affiliateRepository;
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<AffiliateProfileDto> RegisterAffiliateAsync(int userId, AffiliateRegistrationRequestDto request)
@@ -84,7 +87,7 @@ namespace Cosmetics.Service.Affiliate
                 AffiliateProfileId = createdLink.AffiliateProfileId,
                 ProductId = createdLink.ProductId,
                 ReferralCode = createdLink.ReferralCode,
-                CreatedAt = DateTime.UtcNow,  
+                CreatedAt = DateTime.UtcNow,
                 AffiliateProductUrl = $"https://yourdomain.com/product/{productId}?ref={referralCode}"
             };
         }
@@ -135,67 +138,65 @@ namespace Cosmetics.Service.Affiliate
             };
         }
 
-        public async Task<WithdrawalResponseDto> RequestWithdrawalAsync(int userId, WithdrawalRequestDto request)
+        public async Task<TransactionAffiliateDTO> RequestWithdrawalAsync(int userId, WithdrawalRequestDto request)
         {
-            var profile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
-            if (profile == null)
-                throw new Exception("Bạn chưa là Affiliate!");
-            if (profile.Ballance < request.Amount)
-                throw new Exception("Số dư không đủ để rút!");
+            var affiliateProfile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
+            if (affiliateProfile == null) throw new Exception("Affiliate profile not found.");
 
-            var withdrawal = new TransactionAffiliate
+            if (request.Amount <= 0) throw new Exception("Withdrawal amount must be greater than 0.");
+            if (request.Amount > affiliateProfile.Ballance) throw new Exception("Insufficient balance.");
+
+            var transaction = new TransactionAffiliate
             {
-                AffiliateProfileId = profile.AffiliateProfileId,
+                AffiliateProfileId = affiliateProfile.AffiliateProfileId,
                 Amount = request.Amount,
                 TransactionDate = DateTime.UtcNow,
-                Status = "Pending"
+                Status = TransactionStatus.Pending.ToString()
             };
 
-            profile.PendingAmount += request.Amount;
-            profile.Ballance -= request.Amount;
-            await _context.SaveChangesAsync();
+            var createdTransaction = await _affiliateRepository.CreateTransactionAsync(transaction);
 
-            var createdWithdrawal = await _affiliateRepository.CreateWithdrawalAsync(withdrawal);
-            return new WithdrawalResponseDto
-            {
-                TransactionId = createdWithdrawal.TransactionAffiliatesId,
-                Amount = createdWithdrawal.Amount,
-                Status = createdWithdrawal.Status,
-                TransactionDate = createdWithdrawal.TransactionDate ?? DateTime.UtcNow
-            };
+            affiliateProfile.Ballance -= request.Amount;
+            affiliateProfile.PendingAmount += request.Amount;
+            await _affiliateRepository.UpdateAffiliateProfileAsync(affiliateProfile);
+
+            return _mapper.Map<TransactionAffiliateDTO>(createdTransaction);
         }
-
-        public async Task<WithdrawalResponseDto> UpdateWithdrawalStatusAsync(Guid transactionId, WithdrawalStatus status)
+        public async Task<TransactionAffiliateDTO> UpdateWithdrawalStatusAsync(Guid transactionId, WithdrawalStatus status)
         {
-            var withdrawal = await _context.TransactionAffiliates.FindAsync(transactionId);
-            if (withdrawal == null)
-                throw new Exception("Giao dịch không tồn tại!");
+            var transaction = await _context.TransactionAffiliates
+                .FirstOrDefaultAsync(t => t.TransactionAffiliatesId == transactionId);
+            if (transaction == null) throw new Exception("Transaction not found.");
 
-            var profile = await _context.AffiliateProfiles.FindAsync(withdrawal.AffiliateProfileId);
-            withdrawal.Status = status.ToString();
+            var affiliateProfile = await _context.AffiliateProfiles
+                .FirstOrDefaultAsync(ap => ap.AffiliateProfileId == transaction.AffiliateProfileId);
+            if (affiliateProfile == null) throw new Exception("Affiliate profile not found.");
 
-            if (status == WithdrawalStatus.Paid)
+            // Chuyển enum thành string để so sánh và lưu vào DB
+            string newStatus = status.Status.ToString();
+
+            // Nếu trạng thái không thay đổi, không cần xử lý
+            if (transaction.Status == newStatus) return _mapper.Map<TransactionAffiliateDTO>(transaction);
+
+            // Xử lý theo trạng thái mới
+            if (status.Status.Equals(TransactionStatus.Paid)) // Sử dụng Equals thay vì ==
             {
-                profile.WithdrawnAmount += withdrawal.Amount;
-                profile.PendingAmount -= withdrawal.Amount;
+                // Trừ PendingAmount và cộng vào WithdrawnAmount
+                affiliateProfile.PendingAmount -= transaction.Amount;
+                affiliateProfile.WithdrawnAmount += transaction.Amount;
             }
-            else if (status == WithdrawalStatus.Failed)
+            else if (status.Status.Equals(TransactionStatus.Failed)) // Sử dụng Equals thay vì ==
             {
-                profile.Ballance += withdrawal.Amount;
-                profile.PendingAmount -= withdrawal.Amount;
+                // Cộng lại Balance và trừ PendingAmount
+                affiliateProfile.Ballance += transaction.Amount;
+                affiliateProfile.PendingAmount -= transaction.Amount;
             }
 
-            await _affiliateRepository.UpdateWithdrawalAsync(withdrawal);
+            // Cập nhật trạng thái giao dịch
+            transaction.Status = newStatus;
             await _context.SaveChangesAsync();
 
-            return new WithdrawalResponseDto
-            {
-                TransactionId = withdrawal.TransactionAffiliatesId,
-                Amount = withdrawal.Amount,
-                Status = withdrawal.Status,
-                TransactionDate = withdrawal.TransactionDate ?? DateTime.UtcNow
-            };
+            return _mapper.Map<TransactionAffiliateDTO>(transaction);
         }
-
     }
 }
