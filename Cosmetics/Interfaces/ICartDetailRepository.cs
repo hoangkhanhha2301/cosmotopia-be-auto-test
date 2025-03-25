@@ -8,7 +8,7 @@ namespace Cosmetics.Interfaces
         Task<CartDetailDTO> AddToCartAsync(CartDetailInputDTO cartDetailDto, int userId);
         Task<IEnumerable<CartDetailDTO>> GetCartAsync(int userId);
         Task<CartDetailDTO> GetCartItemAsync(Guid productId, int userId);
-        Task<bool> UpdateCartItemAsync(CartDetailDTO cartDetailDto, int userId);
+        Task<bool> UpdateCartItemAsync(CartDetailUpdateDTO cartDetailDto, int userId);
         Task<bool> RemoveFromCartAsync(Guid productId, int userId);
     }
 }
