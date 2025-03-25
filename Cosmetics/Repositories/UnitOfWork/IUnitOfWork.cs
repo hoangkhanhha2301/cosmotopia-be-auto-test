@@ -14,9 +14,13 @@ namespace Cosmetics.Repositories.UnitOfWork
         IProductRepository Products { get; }
         IUserRepository Users { get; }
         IPaymentTransactionRepository PaymentTransactions { get; }
+        ICartDetailRepository CartDetails { get; }
+
+
 
         // Thêm các repository liên quan đến Affiliate
         IAffiliateRepository Affiliates { get; }
+
 
         Task<int> CompleteAsync();
         Task<IDbContextTransaction> BeginTransactionAsync();

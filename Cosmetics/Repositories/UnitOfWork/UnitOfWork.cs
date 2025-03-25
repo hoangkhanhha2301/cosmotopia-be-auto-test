@@ -19,6 +19,7 @@ namespace Cosmetics.Repositories.UnitOfWork
         public IAffiliateRepository Affiliates { get; }
 
         public IPaymentTransactionRepository PaymentTransactions { get; }
+        public ICartDetailRepository CartDetails { get; }
 
         // Uncomment if you need AffiliateLinks later
         // public IAffiliateLinkRepository AffiliateLinks { get; }
@@ -31,9 +32,15 @@ namespace Cosmetics.Repositories.UnitOfWork
             ICategoryRepository categoryRepository,
             IProductRepository productRepository,
             IUserRepository userRepository,
+
             IAffiliateRepository affiliateRepository,
 
             IPaymentTransactionRepository paymentTransactionRepository
+
+            IAffiliateProfileRepository affiliateProfileRepository,
+            IPaymentTransactionRepository paymentTransactionRepository,
+            ICartDetailRepository cartDetailRepository
+
             // Uncomment and add if needed
             // IAffiliateLinkRepository affiliateLinkRepository
             )
@@ -47,6 +54,7 @@ namespace Cosmetics.Repositories.UnitOfWork
             Users = userRepository;
             Affiliates = affiliateRepository;
             PaymentTransactions = paymentTransactionRepository; // Fixed: Assigned
+            CartDetails = cartDetailRepository;
 
             // Uncomment if needed
             // AffiliateLinks = affiliateLinkRepository;
