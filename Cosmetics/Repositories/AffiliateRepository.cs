@@ -95,5 +95,33 @@ namespace Cosmetics.Repositories
             await _context.ClickTrackings.AddAsync(clickTracking);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<TransactionAffiliate> CreateTransactionAsync(TransactionAffiliate transaction)
+        {
+            transaction.TransactionAffiliatesId = Guid.NewGuid(); // Tạo ID mới
+            await _context.TransactionAffiliates.AddAsync(transaction);
+            await _context.SaveChangesAsync();
+            return transaction;
+        }
+        public async Task UpdateAffiliateProfileAsync(AffiliateProfile profile)
+        {
+            var existingProfile = await _context.AffiliateProfiles
+                .FirstOrDefaultAsync(ap => ap.AffiliateProfileId == profile.AffiliateProfileId);
+
+            if (existingProfile == null) throw new Exception("Affiliate profile not found.");
+
+            // Cập nhật các trường cần thiết
+            existingProfile.BankName = profile.BankName;
+            existingProfile.BankAccountNumber = profile.BankAccountNumber;
+            existingProfile.BankBranch = profile.BankBranch;
+            existingProfile.TotalEarnings = profile.TotalEarnings;
+            existingProfile.Ballance = profile.Ballance;
+            existingProfile.PendingAmount = profile.PendingAmount;
+            existingProfile.WithdrawnAmount = profile.WithdrawnAmount;
+            existingProfile.ReferralCode = profile.ReferralCode;
+
+            _context.AffiliateProfiles.Update(existingProfile);
+            await _context.SaveChangesAsync();
+        }
     }
 }
