@@ -55,19 +55,32 @@ namespace Cosmetics.Repositories
         {
             return await _dbSet.AnyAsync(predicate);
         }
+        public async Task<int> CountAsync(Expression<Func<T, bool>> filter = null)
+        {
+            IQueryable<T> query = _dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            return await query.CountAsync();
+        }
 
-        public async Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, int? page = null, int? pageSize = null, params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> GetAsync(
+            Expression<Func<T, bool>> filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            int? page = null,
+            int? pageSize = null,
+            Func<IQueryable<T>, IQueryable<T>>[] includeOperations = null)
         {
             IQueryable<T> query = _dbSet;
 
-            if (includes?.Length > 0)
+            if (includeOperations != null && includeOperations.Length > 0)
             {
-                foreach (var include in includes)
+                foreach (var includeOperation in includeOperations)
                 {
-                    query = query.Include(include);
+                    query = includeOperation(query);
                 }
             }
-
 
             if (filter != null)
             {
@@ -81,11 +94,7 @@ namespace Cosmetics.Repositories
 
             if (page.HasValue && pageSize.HasValue)
             {
-                if(page.Value < 1)
-                {
-                    page = 1;
-                }
-
+                if (page.Value < 1) page = 1;
                 query = query.Skip((page.Value - 1) * pageSize.Value).Take(pageSize.Value);
             }
 

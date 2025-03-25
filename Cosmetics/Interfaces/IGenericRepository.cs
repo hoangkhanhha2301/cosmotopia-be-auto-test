@@ -13,12 +13,12 @@ namespace Cosmetics.Interfaces
         Task UpdateAsync(T entity);
         void Delete(T entity);
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+        Task<int> CountAsync(Expression<Func<T, bool>> filter = null);
         Task<IEnumerable<T>> GetAsync(
             Expression<Func<T, bool>> filter = null,
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
             int? page = null,
             int? pageSize = null,
-            params Expression<Func<T, object>>[] includes
-            );
+            Func<IQueryable<T>, IQueryable<T>>[] includeOperations = null);
     }
 }
