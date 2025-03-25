@@ -15,9 +15,7 @@ namespace Cosmetics.Repositories.UnitOfWork
         public ICategoryRepository Categories { get; }
         public IProductRepository Products { get; }
         public IUserRepository Users { get; }
-
         public IAffiliateRepository Affiliates { get; }
-
         public IPaymentTransactionRepository PaymentTransactions { get; }
         public ICartDetailRepository CartDetails { get; }
 
@@ -32,12 +30,7 @@ namespace Cosmetics.Repositories.UnitOfWork
             ICategoryRepository categoryRepository,
             IProductRepository productRepository,
             IUserRepository userRepository,
-
             IAffiliateRepository affiliateRepository,
-
-            IPaymentTransactionRepository paymentTransactionRepository
-
-            IAffiliateProfileRepository affiliateProfileRepository,
             IPaymentTransactionRepository paymentTransactionRepository,
             ICartDetailRepository cartDetailRepository
 

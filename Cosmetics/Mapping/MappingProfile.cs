@@ -54,11 +54,7 @@ namespace Cosmetics.Mapping
             CreateMap<TransactionAffiliate, WithdrawalResponseDto>()
                 .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.TransactionAffiliatesId))
                 .ReverseMap();
-=======
-            CreateMap<AffiliateProfile, AffiliateIncomeDto>().ReverseMap();
-            CreateMap<AffiliateProfile, GenerateAffiliateLinkDto>().ReverseMap();
-            CreateMap<AffiliateProfile, RegisterAffiliateDto>().ReverseMap();
-            CreateMap<AffiliateProfile, TopProductDto>().ReverseMap();
+   
             //Cart
             CreateMap<CartDetail, CartDetailDTO>().ReverseMap();
             CreateMap<CartDetail, CartDetailInputDTO>().ReverseMap();
