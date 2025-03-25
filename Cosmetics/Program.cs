@@ -3,7 +3,11 @@ using Cosmetics.DTO.User;
 using Cosmetics.Interfaces;
 using Cosmetics.Models;
 using Cosmetics.Repositories;
+using Cosmetics.Repositories.Interface;
 using Cosmetics.Repositories.UnitOfWork;
+using Cosmetics.Service.Affiliate;
+using Cosmetics.Service.Affiliate.Interface;
+
 //using Cosmetics.Service.Affiliate;
 using Cosmetics.Service.OTP;
 using Cosmetics.Service.Payment;
@@ -143,7 +147,8 @@ builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAffiliateProfileRepository, AffiliateProfileRepository>();
+builder.Services.AddScoped<IAffiliateRepository, AffiliateRepository>();
+builder.Services.AddScoped<IAffiliateService, AffiliateService>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
 builder.Services.AddScoped<ICartDetailRepository, CartDetailRepository>();
 

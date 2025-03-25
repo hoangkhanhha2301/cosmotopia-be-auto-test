@@ -1,5 +1,6 @@
 ﻿using Cosmetics.Interfaces;
 using Cosmetics.Models;
+using Cosmetics.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -14,7 +15,9 @@ namespace Cosmetics.Repositories.UnitOfWork
         public ICategoryRepository Categories { get; }
         public IProductRepository Products { get; }
         public IUserRepository Users { get; }
-        public IAffiliateProfileRepository AffiliateProfiles { get; }
+
+        public IAffiliateRepository Affiliates { get; }
+
         public IPaymentTransactionRepository PaymentTransactions { get; }
         public ICartDetailRepository CartDetails { get; }
 
@@ -29,9 +32,15 @@ namespace Cosmetics.Repositories.UnitOfWork
             ICategoryRepository categoryRepository,
             IProductRepository productRepository,
             IUserRepository userRepository,
+
+            IAffiliateRepository affiliateRepository,
+
+            IPaymentTransactionRepository paymentTransactionRepository
+
             IAffiliateProfileRepository affiliateProfileRepository,
             IPaymentTransactionRepository paymentTransactionRepository,
             ICartDetailRepository cartDetailRepository
+
             // Uncomment and add if needed
             // IAffiliateLinkRepository affiliateLinkRepository
             )
@@ -43,7 +52,7 @@ namespace Cosmetics.Repositories.UnitOfWork
             Categories = categoryRepository;
             Products = productRepository;
             Users = userRepository;
-            AffiliateProfiles = affiliateProfileRepository; // Fixed: Assigned
+            Affiliates = affiliateRepository;
             PaymentTransactions = paymentTransactionRepository; // Fixed: Assigned
             CartDetails = cartDetailRepository;
 

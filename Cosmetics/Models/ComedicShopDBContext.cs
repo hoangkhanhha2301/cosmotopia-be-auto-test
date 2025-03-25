@@ -194,7 +194,6 @@ public partial class ComedicShopDBContext : DbContext
             entity.ToTable("ClickTracking");
 
             entity.Property(e => e.ClickId).HasColumnName("ClickID");
-            entity.Property(e => e.ClickCount).HasDefaultValue(1);
             entity.Property(e => e.ClickedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
