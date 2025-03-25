@@ -51,8 +51,17 @@ namespace Cosmetics.Repositories
 
             if (existingItem != null)
             {
-                existingItem.Quantity += cartDetailDto.Quantity;
-                _context.CartDetails.Update(existingItem);
+                var newQuantity = existingItem.Quantity + cartDetailDto.Quantity;
+                if (newQuantity > existingItem.Product.StockQuantity)
+                {
+                    existingItem.Quantity = existingItem.Product.StockQuantity ?? 0;
+                }
+                else
+                {
+                    existingItem.Quantity = newQuantity;
+                }
+
+                    _context.CartDetails.Update(existingItem);
             }
             else
             {
@@ -109,16 +118,19 @@ namespace Cosmetics.Repositories
             return MapToCartDetailDTO(cartItem);
         }
 
-        public async Task<bool> UpdateCartItemAsync(CartDetailDTO cartDetailDto, int userId)
+        public async Task<bool> UpdateCartItemAsync(CartDetailUpdateDTO cartDetailUpdateDto, int userId)
         {
             userId = GetCurrentUserId(); // Override with logged-in user
-            var cartItem = await _context.CartDetails
-                .FirstOrDefaultAsync(cd => cd.UserId == userId && cd.ProductId == cartDetailDto.ProductId);
+            var cartItem = await _context.CartDetails.Include(cd => cd.Product)
+                .FirstOrDefaultAsync(cd => cd.UserId == userId && cd.ProductId == cartDetailUpdateDto.ProductId);
 
             if (cartItem == null)
                 return false;
-
-            cartItem.Quantity = cartDetailDto.Quantity;
+            if(cartItem.Product.StockQuantity < cartDetailUpdateDto.Quantity)
+            {
+                return false;
+            }
+            cartItem.Quantity = cartDetailUpdateDto.Quantity;
             _context.CartDetails.Update(cartItem);
             await _context.SaveChangesAsync();
             return true;

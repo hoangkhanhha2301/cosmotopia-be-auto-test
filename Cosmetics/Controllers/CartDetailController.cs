@@ -78,7 +78,7 @@ public class CartDetailController : ControllerBase
     }
 
     [HttpPut("update")]
-    public async Task<IActionResult> UpdateCartItem([FromBody] CartDetailDTO cartDetailDto)
+    public async Task<IActionResult> UpdateCartItem([FromBody] CartDetailUpdateDTO cartDetailDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
