@@ -1,4 +1,5 @@
 ﻿using Cosmetics.DTO.Affiliate;
+using Cosmetics.DTO.User;
 using Cosmetics.Enum;
 using Cosmetics.Models;
 using Cosmetics.Service.Affiliate.Interface;
@@ -96,6 +97,39 @@ namespace Cosmetics.Controllers
         {
             var result = await _affiliateService.UpdateWithdrawalStatusAsync(transactionId, status);
             return Ok(result);
+        }
+
+
+        [HttpGet("profile")]
+        [Authorize(Roles = "Affiliates")]
+        public async Task<IActionResult> GetAffiliateProfile()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("User not authenticated."));
+                var profile = await _affiliateService.GetAffiliateProfileAsync(userId);
+
+                var response = new ApiResponse
+                {
+                    Success = true,
+                    StatusCode = 0,
+                    Message = "User found",
+                    Data = profile
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var response = new ApiResponse
+                {
+                    Success = false,
+                    StatusCode = 1,
+                    Message = ex.Message,
+                    Data = null
+                };
+                return BadRequest(response);
+            }
         }
     }
 }

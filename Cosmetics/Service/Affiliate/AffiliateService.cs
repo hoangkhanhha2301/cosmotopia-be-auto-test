@@ -198,5 +198,37 @@ namespace Cosmetics.Service.Affiliate
 
             return _mapper.Map<TransactionAffiliateDTO>(transaction);
         }
+        public async Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId)
+        {
+            // Lấy thông tin từ AffiliateProfiles
+            var affiliateProfile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
+            if (affiliateProfile == null) throw new Exception("Affiliate profile not found.");
+
+            // Lấy thông tin từ Users
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null) throw new Exception("User not found.");
+
+            // Kết hợp dữ liệu vào DTO
+            var response = new AffiliateProfileResponseDto
+            {
+                AffiliateProfileId = affiliateProfile.AffiliateProfileId,
+                UserId = affiliateProfile.UserId,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Phone = user.Phone,
+                RoleType = user.RoleType,
+                BankName = affiliateProfile.BankName,
+                BankAccountNumber = affiliateProfile.BankAccountNumber,
+                BankBranch = affiliateProfile.BankBranch,
+                TotalEarnings = affiliateProfile.TotalEarnings ?? 0m,
+                Balance = affiliateProfile.Ballance ?? 0m,
+                PendingAmount = affiliateProfile.PendingAmount ?? 0m,
+                WithdrawnAmount = affiliateProfile.WithdrawnAmount ?? 0m,
+            };
+
+            return response;
+        }
     }
 }

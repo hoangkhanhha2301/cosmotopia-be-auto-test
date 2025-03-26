@@ -11,7 +11,9 @@ namespace Cosmetics.Service.Affiliate.Interface
         Task<TransactionAffiliateDTO> RequestWithdrawalAsync(int userId, WithdrawalRequestDto request);
         Task<TransactionAffiliateDTO> UpdateWithdrawalStatusAsync(Guid transactionId, WithdrawalStatus status);
 
-        Task TrackAffiliateClickAsync(string referralCode, int? userId); 
+        Task TrackAffiliateClickAsync(string referralCode, int? userId);
+
+        Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId); // Thêm phương thức mới
 
     }
 }
