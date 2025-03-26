@@ -230,5 +230,40 @@ namespace Cosmetics.Service.Affiliate
 
             return response;
         }
+        public async Task<List<TransactionAffiliateDTO>> GetWithdrawalsByAffiliateAsync(int userId)
+        {
+            var affiliateProfile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
+            if (affiliateProfile == null) throw new Exception("Affiliate profile not found.");
+
+            var withdrawals = await _context.TransactionAffiliates
+                .Where(t => t.AffiliateProfileId == affiliateProfile.AffiliateProfileId)
+                .ToListAsync();
+
+            return _mapper.Map<List<TransactionAffiliateDTO>>(withdrawals);
+        }
+
+
+
+        public async Task<List<TransactionAffiliateExtendedDTO>> GetAllWithdrawalsAsync()
+        {
+            var withdrawals = await _context.TransactionAffiliates
+                .Include(t => t.AffiliateProfile)
+                .ThenInclude(ap => ap.User)
+                .Select(t => new TransactionAffiliateExtendedDTO
+                {
+                    TransactionAffiliatesId = t.TransactionAffiliatesId,
+                    AffiliateProfileId = t.AffiliateProfileId ?? Guid.Empty, // Xử lý null
+                    Amount = t.Amount,
+                    TransactionDate = t.TransactionDate ?? DateTime.UtcNow,
+                    Status = t.Status,
+                    AffiliateName = t.AffiliateProfile.User.FirstName + " " + t.AffiliateProfile.User.LastName,
+                    Email = t.AffiliateProfile.User.Email,
+                    BankName = t.AffiliateProfile.BankName,
+                    BankAccountNumber = t.AffiliateProfile.BankAccountNumber
+                })
+                .ToListAsync();
+
+            return withdrawals;
+        }
     }
 }

@@ -60,6 +60,8 @@ namespace Cosmetics.Mapping
             CreateMap<CartDetail, CartDetailInputDTO>().ReverseMap();
 
 
+            CreateMap<TransactionAffiliate, TransactionAffiliateDTO>()
+            .ForMember(dest => dest.AffiliateProfileId, opt => opt.MapFrom(src => src.AffiliateProfileId ?? Guid.Empty));
         }
     }
 }

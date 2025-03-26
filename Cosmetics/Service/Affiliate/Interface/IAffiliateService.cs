@@ -15,5 +15,9 @@ namespace Cosmetics.Service.Affiliate.Interface
 
         Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId); // Thêm phương thức mới
 
+        Task<List<TransactionAffiliateDTO>> GetWithdrawalsByAffiliateAsync(int userId);
+
+        Task<List<TransactionAffiliateExtendedDTO>> GetAllWithdrawalsAsync();
+
     }
 }
