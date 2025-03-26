@@ -1,10 +1,13 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using Cosmetics.DTO.Affiliate;
 using Cosmetics.Enum;
+
 using Cosmetics.Models;
 using Cosmetics.Repositories.Interface;
 using Cosmetics.Service.Affiliate.Interface;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace Cosmetics.Service.Affiliate
 {
@@ -172,20 +175,30 @@ namespace Cosmetics.Service.Affiliate
                 .FirstOrDefaultAsync(ap => ap.AffiliateProfileId == transaction.AffiliateProfileId);
             if (affiliateProfile == null) throw new Exception("Affiliate profile not found.");
 
-            // Chuyển enum thành string để so sánh và lưu vào DB
-            string newStatus = status.Status.ToString();
+            // Lấy trạng thái mới từ DTO
+            string newStatus = status.Status;
+
+            // Kiểm tra trạng thái hợp lệ
+            var validStatuses = new[] { "Pending", "Paid", "Failed" };
+            if (!validStatuses.Contains(newStatus, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new Exception("Invalid status value. Use 'Pending', 'Paid', or 'Failed'.");
+            }
 
             // Nếu trạng thái không thay đổi, không cần xử lý
-            if (transaction.Status == newStatus) return _mapper.Map<TransactionAffiliateDTO>(transaction);
+            if (transaction.Status.Equals(newStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                return _mapper.Map<TransactionAffiliateDTO>(transaction);
+            }
 
             // Xử lý theo trạng thái mới
-            if (status.Status.Equals(TransactionStatus.Paid)) // Sử dụng Equals thay vì ==
+            if (newStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase))
             {
                 // Trừ PendingAmount và cộng vào WithdrawnAmount
                 affiliateProfile.PendingAmount -= transaction.Amount;
                 affiliateProfile.WithdrawnAmount += transaction.Amount;
             }
-            else if (status.Status.Equals(TransactionStatus.Failed)) // Sử dụng Equals thay vì ==
+            else if (newStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase))
             {
                 // Cộng lại Balance và trừ PendingAmount
                 affiliateProfile.Ballance += transaction.Amount;
@@ -194,10 +207,18 @@ namespace Cosmetics.Service.Affiliate
 
             // Cập nhật trạng thái giao dịch
             transaction.Status = newStatus;
+
+            // Lưu thay đổi của transaction
             await _context.SaveChangesAsync();
+
+            // Lưu thay đổi của affiliateProfile
+            await _affiliateRepository.UpdateAffiliateProfileAsync(affiliateProfile);
 
             return _mapper.Map<TransactionAffiliateDTO>(transaction);
         }
+
+
+
         public async Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId)
         {
             // Lấy thông tin từ AffiliateProfiles
