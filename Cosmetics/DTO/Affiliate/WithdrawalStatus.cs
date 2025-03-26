@@ -4,6 +4,6 @@ namespace Cosmetics.DTO.Affiliate
 {
     public class WithdrawalStatus
     {
-        public TransactionStatus Status { get; set; } // Sử dụng enum
+        public string Status { get; set; } // "Pending", "Paid", hoặc "Failed"
     }
 }

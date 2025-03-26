@@ -95,8 +95,31 @@ namespace Cosmetics.Controllers
         [Authorize(Roles = "Manager")] // Chỉ Manager mới được cập nhật trạng thái
         public async Task<IActionResult> UpdateWithdrawalStatus(Guid transactionId, [FromBody] WithdrawalStatus status)
         {
-            var result = await _affiliateService.UpdateWithdrawalStatusAsync(transactionId, status);
-            return Ok(result);
+            try
+            {
+                var result = await _affiliateService.UpdateWithdrawalStatusAsync(transactionId, status);
+
+                var response = new ApiResponse
+                {
+                    Success = true,
+                    StatusCode = 0,
+                    Message = "Withdrawal status updated successfully.",
+                    Data = result
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var response = new ApiResponse
+                {
+                    Success = false,
+                    StatusCode = 1,
+                    Message = ex.Message,
+                    Data = null
+                };
+                return BadRequest(response);
+            }
         }
 
 
