@@ -288,6 +288,13 @@ namespace ComedicShopAPI.Controllers
                 return Unauthorized(new ApiResponse { Success = false, Message = "Invalid user ID" });
             }
 
+            // Kiểm tra vai trò từ Claims
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole == "Affiliates") // Giả sử vai trò "Affiliate" được lưu trong Claims
+            {
+                return BadRequest(new ApiResponse { Success = false, Message = "Affiliates are not allowed to edit their profile." });
+            }
+
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
             if (user == null)
             {
