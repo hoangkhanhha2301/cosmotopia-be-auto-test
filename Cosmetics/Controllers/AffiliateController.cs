@@ -131,5 +131,69 @@ namespace Cosmetics.Controllers
                 return BadRequest(response);
             }
         }
+
+
+        [HttpGet("withdrawals")]
+        [Authorize(Roles = "Affiliates")]
+        public async Task<IActionResult> GetWithdrawalsByAffiliate()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("User not authenticated."));
+                var withdrawals = await _affiliateService.GetWithdrawalsByAffiliateAsync(userId);
+
+                var response = new ApiResponse
+                {
+                    Success = true,
+                    StatusCode = 0,
+                    Message = "Withdrawals retrieved successfully.",
+                    Data = withdrawals
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var response = new ApiResponse
+                {
+                    Success = false,
+                    StatusCode = 1,
+                    Message = ex.Message,
+                    Data = null
+                };
+                return BadRequest(response);
+            }
+        }
+
+        [HttpGet("manager/withdrawals")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> GetAllWithdrawals()
+        {
+            try
+            {
+                var withdrawals = await _affiliateService.GetAllWithdrawalsAsync();
+
+                var response = new ApiResponse
+                {
+                    Success = true,
+                    StatusCode = 0,
+                    Message = "All withdrawals retrieved successfully.",
+                    Data = withdrawals
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var response = new ApiResponse
+                {
+                    Success = false,
+                    StatusCode = 1,
+                    Message = ex.Message,
+                    Data = null
+                };
+                return BadRequest(response);
+            }
+        }
     }
 }
