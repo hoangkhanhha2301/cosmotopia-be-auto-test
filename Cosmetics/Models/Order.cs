@@ -14,8 +14,6 @@ public partial class Order
 
     public int? SalesStaffId { get; set; }
 
-    public Guid? AffiliateProfileId { get; set; }
-
     public decimal? TotalAmount { get; set; }
 
     public OrderStatus Status { get; set; }
@@ -25,8 +23,6 @@ public partial class Order
     public string PaymentMethod { get; set; }
 
     public string Address { get; set; }
-
-    public virtual AffiliateProfile AffiliateProfile { get; set; }
 
     public virtual User Customer { get; set; }
 

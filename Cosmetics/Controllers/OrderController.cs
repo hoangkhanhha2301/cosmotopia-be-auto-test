@@ -43,7 +43,6 @@ namespace Cosmetics.Controllers
                     CustomerId = order.CustomerId,
                     CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
                     SalesStaffId = order.SalesStaffId,
-                    AffiliateProfileId = order.AffiliateProfileId,
                     TotalAmount = order.TotalAmount,
                     Status = order.Status,
                     OrderDate = order.OrderDate,
@@ -160,7 +159,6 @@ namespace Cosmetics.Controllers
 
             order.CustomerId = dto.CustomerId;
             order.SalesStaffId = dto.SalesStaffId;
-            order.AffiliateProfileId = dto.AffiliateProfileId;
             order.TotalAmount = dto.TotalAmount;
             order.Status = dto.Status;
             order.OrderDate = dto.OrderDate;
@@ -185,7 +183,6 @@ namespace Cosmetics.Controllers
                 CustomerId = order.CustomerId,
                 CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
                 SalesStaffId = order.SalesStaffId,
-                AffiliateProfileId = order.AffiliateProfileId,
                 TotalAmount = order.TotalAmount,
                 Status = order.Status,
                 OrderDate = order.OrderDate,
@@ -254,7 +251,6 @@ namespace Cosmetics.Controllers
                     CustomerId = order.CustomerId,
                     CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
                     SalesStaffId = order.SalesStaffId,
-                    AffiliateProfileId = order.AffiliateProfileId,
                     TotalAmount = order.TotalAmount,
                     Status = order.Status,
                     OrderDate = order.OrderDate,
@@ -309,7 +305,6 @@ namespace Cosmetics.Controllers
                 CustomerId = order.CustomerId,
                 CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
                 SalesStaffId = order.SalesStaffId,
-                AffiliateProfileId = order.AffiliateProfileId,
                 TotalAmount = order.TotalAmount,
                 Status = order.Status,
                 OrderDate = order.OrderDate,

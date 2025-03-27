@@ -13,6 +13,8 @@ public partial class OrderDetail
 
     public Guid? ProductId { get; set; }
 
+    public Guid? AffiliateProfileId { get; set; }
+
     public int Quantity { get; set; }
 
     public decimal? UnitPrice { get; set; }
@@ -20,6 +22,8 @@ public partial class OrderDetail
     public decimal? CommissionAmount { get; set; }
 
     public virtual ICollection<AffiliateCommission> AffiliateCommissions { get; set; } = new List<AffiliateCommission>();
+
+    public virtual AffiliateProfile AffiliateProfile { get; set; }
 
     public virtual Order Order { get; set; }
 
