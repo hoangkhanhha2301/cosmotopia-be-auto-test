@@ -62,6 +62,21 @@ namespace Cosmetics.Mapping
 
             CreateMap<TransactionAffiliate, TransactionAffiliateDTO>()
             .ForMember(dest => dest.AffiliateProfileId, opt => opt.MapFrom(src => src.AffiliateProfileId ?? Guid.Empty));
+
+
+            CreateMap<AffiliateProductLink, AffiliateLinkDto>()
+    .ForMember(dest => dest.LinkId, opt => opt.MapFrom(src => src.LinkId))
+    .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId));
+
+            CreateMap<TransactionAffiliate, TransactionAffiliateExtendedDTO>()
+                .ForMember(dest => dest.AffiliateProfileId, opt => opt.MapFrom(src => src.AffiliateProfileId ?? Guid.Empty))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.AffiliateProfile != null && src.AffiliateProfile.User != null ? src.AffiliateProfile.User.FirstName : "N/A"))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.AffiliateProfile != null && src.AffiliateProfile.User != null ? src.AffiliateProfile.User.LastName : "N/A"))
+                .ForMember(dest => dest.AffiliateName, opt => opt.MapFrom(src => src.AffiliateProfile != null && src.AffiliateProfile.User != null ? $"{src.AffiliateProfile.User.FirstName} {src.AffiliateProfile.User.LastName}" : "N/A"))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.AffiliateProfile != null && src.AffiliateProfile.User != null ? src.AffiliateProfile.User.Email : "N/A"))
+                .ForMember(dest => dest.BankName, opt => opt.MapFrom(src => src.AffiliateProfile != null ? src.AffiliateProfile.BankName : "N/A"))
+                .ForMember(dest => dest.BankAccountNumber, opt => opt.MapFrom(src => src.AffiliateProfile != null ? src.AffiliateProfile.BankAccountNumber : "N/A"))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.TransactionDetail != null ? src.TransactionDetail.Image : null));
         }
     }
 }

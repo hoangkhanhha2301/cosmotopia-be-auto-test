@@ -80,6 +80,13 @@ namespace Cosmetics.Service.Affiliate
                 ReferralCode = referralCode,
                 CreatedAt = DateTime.UtcNow
             };
+            // Kiểm tra xem Affiliate đã tạo link cho sản phẩm này chưa
+            var existingLink = await _context.AffiliateProductLinks
+                .FirstOrDefaultAsync(al => al.AffiliateProfileId == profile.AffiliateProfileId && al.ProductId == productId);
+            if (existingLink != null)
+            {
+                throw new Exception("You have already generated a link for this product.");
+            }
 
             var createdLink = await _affiliateRepository.CreateAffiliateLinkAsync(affiliateLink);
 
@@ -168,55 +175,66 @@ namespace Cosmetics.Service.Affiliate
         public async Task<TransactionAffiliateDTO> UpdateWithdrawalStatusAsync(Guid transactionId, WithdrawalStatus status)
         {
             var transaction = await _context.TransactionAffiliates
-                .FirstOrDefaultAsync(t => t.TransactionAffiliatesId == transactionId);
+        .Include(t => t.TransactionDetail)
+        .FirstOrDefaultAsync(t => t.TransactionAffiliatesId == transactionId);
             if (transaction == null) throw new Exception("Transaction not found.");
 
             var affiliateProfile = await _context.AffiliateProfiles
                 .FirstOrDefaultAsync(ap => ap.AffiliateProfileId == transaction.AffiliateProfileId);
             if (affiliateProfile == null) throw new Exception("Affiliate profile not found.");
 
-            // Lấy trạng thái mới từ DTO
-            string newStatus = status.Status;
-
-            // Kiểm tra trạng thái hợp lệ
             var validStatuses = new[] { "Pending", "Paid", "Failed" };
-            if (!validStatuses.Contains(newStatus, StringComparer.OrdinalIgnoreCase))
+            if (!validStatuses.Contains(status.Status, StringComparer.OrdinalIgnoreCase))
             {
                 throw new Exception("Invalid status value. Use 'Pending', 'Paid', or 'Failed'.");
             }
 
-            // Nếu trạng thái không thay đổi, không cần xử lý
-            if (transaction.Status.Equals(newStatus, StringComparison.OrdinalIgnoreCase))
+            // So sánh status và image để tránh cập nhật không cần thiết
+            if (transaction.Status == status.Status &&
+                (transaction.TransactionDetail == null || transaction.TransactionDetail.Image == status.Image))
             {
                 return _mapper.Map<TransactionAffiliateDTO>(transaction);
             }
 
-            // Xử lý theo trạng thái mới
-            if (newStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+            // Cập nhật số dư dựa trên status
+            if (status.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
             {
-                // Trừ PendingAmount và cộng vào WithdrawnAmount
                 affiliateProfile.PendingAmount -= transaction.Amount;
                 affiliateProfile.WithdrawnAmount += transaction.Amount;
             }
-            else if (newStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase))
+            else if (status.Status.Equals("Failed", StringComparison.OrdinalIgnoreCase))
             {
-                // Cộng lại Balance và trừ PendingAmount
                 affiliateProfile.Ballance += transaction.Amount;
                 affiliateProfile.PendingAmount -= transaction.Amount;
             }
 
-            // Cập nhật trạng thái giao dịch
-            transaction.Status = newStatus;
+            // Cập nhật status
+            transaction.Status = status.Status;
 
-            // Lưu thay đổi của transaction
+            // Cập nhật image
+            if (!string.IsNullOrEmpty(status.Image))
+            {
+                if (transaction.TransactionDetail == null)
+                {
+                    transaction.TransactionDetail = new TransactionDetail
+                    {
+                        TransactionDetailId = Guid.NewGuid(),
+                        TransactionAffiliatesId = transaction.TransactionAffiliatesId,
+                        Image = status.Image
+                    };
+                    _context.TransactionDetails.Add(transaction.TransactionDetail);
+                }
+                else
+                {
+                    transaction.TransactionDetail.Image = status.Image;
+                }
+            }
+
             await _context.SaveChangesAsync();
-
-            // Lưu thay đổi của affiliateProfile
             await _affiliateRepository.UpdateAffiliateProfileAsync(affiliateProfile);
 
             return _mapper.Map<TransactionAffiliateDTO>(transaction);
         }
-
 
 
         public async Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId)
@@ -270,21 +288,54 @@ namespace Cosmetics.Service.Affiliate
             var withdrawals = await _context.TransactionAffiliates
                 .Include(t => t.AffiliateProfile)
                 .ThenInclude(ap => ap.User)
-                .Select(t => new TransactionAffiliateExtendedDTO
+                .Include(t => t.TransactionDetail)
+                .ToListAsync(); // Lấy dữ liệu thô trước
+
+            var result = withdrawals.Select(t => new TransactionAffiliateExtendedDTO
+            {
+                TransactionAffiliatesId = t.TransactionAffiliatesId,
+                AffiliateProfileId = t.AffiliateProfileId ?? Guid.Empty,
+                Amount = t.Amount,
+                TransactionDate = t.TransactionDate ?? DateTime.UtcNow, // Loại bỏ ?? DateTime.UtcNow
+                Status = t.Status,
+                Image = t.TransactionDetail != null ? t.TransactionDetail.Image : null, // Đã sửa kiểu Image thành string
+                FirstName = t.AffiliateProfile != null && t.AffiliateProfile.User != null ? t.AffiliateProfile.User.FirstName : "N/A",
+                LastName = t.AffiliateProfile != null && t.AffiliateProfile.User != null ? t.AffiliateProfile.User.LastName : "N/A",
+                AffiliateName = t.AffiliateProfile != null && t.AffiliateProfile.User != null ? $"{t.AffiliateProfile.User.FirstName} {t.AffiliateProfile.User.LastName}" : "N/A",
+                Email = t.AffiliateProfile != null && t.AffiliateProfile.User != null ? t.AffiliateProfile.User.Email : "N/A",
+                BankName = t.AffiliateProfile != null ? t.AffiliateProfile.BankName : "N/A",
+                BankAccountNumber = t.AffiliateProfile != null ? t.AffiliateProfile.BankAccountNumber : "N/A"
+            }).ToList();
+
+            return result;
+        }
+
+        public async Task<List<AffiliateLinkExtendedDto>> GetAllLinksAsync(int userId)
+        {
+            var affiliateProfile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
+            if (affiliateProfile == null)
+            {
+                throw new Exception("Affiliate profile not found.");
+            }
+
+            var links = await _context.AffiliateProductLinks
+                .Include(al => al.Product)
+                .Where(al => al.AffiliateProfileId == affiliateProfile.AffiliateProfileId)
+                .Select(al => new AffiliateLinkExtendedDto
                 {
-                    TransactionAffiliatesId = t.TransactionAffiliatesId,
-                    AffiliateProfileId = t.AffiliateProfileId ?? Guid.Empty, // Xử lý null
-                    Amount = t.Amount,
-                    TransactionDate = t.TransactionDate ?? DateTime.UtcNow,
-                    Status = t.Status,
-                    AffiliateName = t.AffiliateProfile.User.FirstName + " " + t.AffiliateProfile.User.LastName,
-                    Email = t.AffiliateProfile.User.Email,
-                    BankName = t.AffiliateProfile.BankName,
-                    BankAccountNumber = t.AffiliateProfile.BankAccountNumber
+                    LinkId = al.LinkId,
+                    AffiliateProfileId = al.AffiliateProfileId,
+                    ProductId = al.ProductId,
+                    ProductName = al.Product.Name,
+                    Price = al.Product.Price,
+                    CommissionRate = al.Product.CommissionRate ?? 0m,
+                    Image = string.Join(",", al.Product.ImageUrls),
+                    ReferralCode = al.ReferralCode,
+                    CreatedAt = al.CreatedAt ?? DateTime.UtcNow,
                 })
                 .ToListAsync();
 
-            return withdrawals;
+            return links;
         }
     }
 }
