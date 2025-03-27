@@ -33,7 +33,7 @@ public partial class AffiliateProfile
 
     public virtual ICollection<AffiliateProductLink> AffiliateProductLinks { get; set; } = new List<AffiliateProductLink>();
 
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual ICollection<TransactionAffiliate> TransactionAffiliates { get; set; } = new List<TransactionAffiliate>();
 
