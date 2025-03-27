@@ -329,7 +329,7 @@ namespace Cosmetics.Service.Affiliate
                     ProductName = al.Product.Name,
                     Price = al.Product.Price,
                     CommissionRate = al.Product.CommissionRate ?? 0m,
-                    Image = string.Join(",", al.Product.ImageUrls),
+                    Image = al.Product.ImageUrls,
                     ReferralCode = al.ReferralCode,
                     CreatedAt = al.CreatedAt ?? DateTime.UtcNow,
                 })
