@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System;
 
 namespace Cosmetics.Controllers
 {
@@ -119,10 +120,17 @@ namespace Cosmetics.Controllers
             }
         }
         [HttpPut("update-payment-status/{transactionId}")]
-        public async Task<IActionResult> UpdatePaymentStatus(string transactionId)
+        public async Task<IActionResult> UpdatePaymentStatus(string transactionId, [FromQuery] int newStatus)
         {
             if (string.IsNullOrEmpty(transactionId))
                 return BadRequest("Transaction ID is required");
+
+            // Kiểm tra status đầu vào
+            if (!System.Enum.IsDefined(typeof(PaymentStatus), newStatus) ||
+                (newStatus != (int)PaymentStatus.Success && newStatus != (int)PaymentStatus.Failed))
+            {
+                return BadRequest("New status must be either Success (1) or Fail (2)");
+            }
 
             try
             {
@@ -131,28 +139,37 @@ namespace Cosmetics.Controllers
                     return NotFound($"No payment found with Transaction ID: {transactionId}");
 
                 if (payment.Status != PaymentStatus.Pending)
-                    return BadRequest($"Payment status can only be updated from Pending (0) to Processing (1). Current status: {payment.Status}");
+                    return BadRequest($"Payment status can only be updated from Pending (0) to Success (1) or Fail (2). Current status: {payment.Status}");
 
                 var updatedPayment = new PaymentResponseDTO
                 {
                     TransactionId = payment.TransactionId,
                     Amount = payment.Amount,
-                    ResultCode = payment.ResultCode, // No CS1061 error now
-                    ResponseTime = payment.ResponseTime, // No CS1061 error now
-                    Status = PaymentStatus.Success
+                    ResultCode = payment.ResultCode,
+                    ResponseTime = DateTime.UtcNow,
+                    Status = (PaymentStatus)newStatus // Sử dụng status từ request
                 };
 
                 var success = await _paymentService.UpdatePaymentStatusAsync(updatedPayment);
                 if (!success)
-                    return BadRequest("Failed to update payment status");
+                    return BadRequest($"Failed to update payment status. Either the status is invalid or the transaction cannot be updated.");
 
-                return Ok(new { Message = $"Payment status updated successfully for Transaction ID: {transactionId}" });
+                string statusMessage = updatedPayment.Status == PaymentStatus.Success
+                    ? "Success (1)"
+                    : "Fail (2)";
+                return Ok(new
+                {
+                    Message = $"Payment status updated to {statusMessage} for Transaction ID: {transactionId}",
+                    UpdatedStatus = updatedPayment.Status,
+                    ResponseTime = updatedPayment.ResponseTime
+                });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"An error occurred while updating the payment status: {ex.Message}");
             }
         }
+
     }
 
 }
