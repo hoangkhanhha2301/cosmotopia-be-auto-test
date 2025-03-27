@@ -28,32 +28,37 @@ namespace Cosmetics.Controllers
             return Ok(result);
         }
 
-        [HttpPost("create-link")]
-        public async Task<IActionResult> CreateAffiliateLink([FromQuery] Guid productId)
+        [HttpPost("generate-link")]
+[Authorize(Roles = "Affiliates")]
+public async Task<IActionResult> GenerateLink([FromBody] GenerateLinkRequestDto request)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("User not authenticated."));
+        var link = await _affiliateService.GenerateAffiliateLinkAsync(userId, request.ProductId);
+
+        var response = new ApiResponse
         {
-            try
-            {
-                // Ensure the user is authenticated and has a valid userId
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Success = true,
+            StatusCode = 0,
+            Message = "Link generated successfully.",
+            Data = link
+        };
 
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    // If userId is missing or invalid, return Unauthorized or BadRequest
-                    return Unauthorized(new { message = "User is not authenticated or invalid user ID." });
-                }
-
-                // Call the service method to generate the affiliate link
-                var result = await _affiliateService.GenerateAffiliateLinkAsync(userId, productId);
-
-                // Return the generated affiliate link DTO in a successful response
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                // Catch any exceptions and return a bad request with the error message
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        return Ok(response);
+    }
+    catch (Exception ex)
+    {
+        var response = new ApiResponse
+        {
+            Success = false,
+            StatusCode = 1,
+            Message = ex.Message,
+            Data = null
+        };
+        return BadRequest(response);
+    }
+}
 
 
         [HttpGet("track-click")]
@@ -202,6 +207,38 @@ namespace Cosmetics.Controllers
                     StatusCode = 0,
                     Message = "All withdrawals retrieved successfully.",
                     Data = withdrawals
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var response = new ApiResponse
+                {
+                    Success = false,
+                    StatusCode = 1,
+                    Message = ex.Message,
+                    Data = null
+                };
+                return BadRequest(response);
+            }
+        }
+
+        [HttpGet("links")]
+        [Authorize(Roles = "Affiliates")]
+        public async Task<IActionResult> GetAllLinks()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("User not authenticated."));
+                var links = await _affiliateService.GetAllLinksAsync(userId);
+
+                var response = new ApiResponse
+                {
+                    Success = true,
+                    StatusCode = 0,
+                    Message = "All links retrieved successfully.",
+                    Data = links
                 };
 
                 return Ok(response);

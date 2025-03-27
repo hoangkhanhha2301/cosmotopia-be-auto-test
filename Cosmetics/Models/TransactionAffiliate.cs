@@ -18,4 +18,6 @@ public partial class TransactionAffiliate
     public string Status { get; set; }
 
     public virtual AffiliateProfile AffiliateProfile { get; set; }
+
+    public TransactionDetail TransactionDetail { get; set; } 
 }
