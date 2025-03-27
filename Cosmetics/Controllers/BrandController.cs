@@ -210,14 +210,14 @@ namespace Cosmetics.Controllers
             update.Name = brandDTO.Name;
             update.IsPremium = brandDTO.IsPremium;
 
-            if(await _unitOfWork.Brands.brandNameExist(update.Name))
-            {
-                return BadRequest(new ApiResponse
-                {
-                    Success = false,
-                    Message = "BrandName already exist!"
-                });
-            }
+            //if(await _unitOfWork.Brands.brandNameExist(update.Name))
+            //{
+            //    return BadRequest(new ApiResponse
+            //    {
+            //        Success = false,
+            //        Message = "BrandName already exist!"
+            //    });
+            //}
 
             _unitOfWork.Brands.UpdateAsync(update);
             await _unitOfWork.CompleteAsync();
