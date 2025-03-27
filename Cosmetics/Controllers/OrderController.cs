@@ -5,6 +5,8 @@ using Cosmetics.Models;
 using Cosmetics.Repositories.UnitOfWork;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace Cosmetics.Controllers
@@ -79,7 +81,7 @@ namespace Cosmetics.Controllers
             if (dto == null || dto.OrderDetails == null || !dto.OrderDetails.Any())
                 return BadRequest("Order must contain at least one item.");
 
-            // Extract UserID from the authenticated user (same as GetOrdersByUser)
+            // Extract UserID from the authenticated user
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized("User is not authenticated.");
@@ -87,14 +89,14 @@ namespace Cosmetics.Controllers
             if (!int.TryParse(userIdClaim.Value, out int userId))
                 return BadRequest("Invalid user ID.");
 
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
                     var order = new Order
                     {
                         OrderId = Guid.NewGuid(),
-                        CustomerId = userId, // Maps to UserID in Users table
+                        CustomerId = userId, // Maps to UserID in Users table (int)
                         SalesStaffId = dto.SalesStaffId,
                         TotalAmount = 0,
                         Status = OrderStatus.Confirmed,
@@ -106,7 +108,7 @@ namespace Cosmetics.Controllers
                     var orderDetails = new List<OrderDetail>();
                     foreach (var detailDto in dto.OrderDetails)
                     {
-                        var product = await _unitOfWork.Products.GetByIdAsync(detailDto.ProductId.Value);
+                        var product = await _context.Products.FindAsync(detailDto.ProductId.Value);
                         if (product == null)
                             return NotFound($"Product with ID {detailDto.ProductId} not found.");
 
@@ -114,11 +116,43 @@ namespace Cosmetics.Controllers
                             return BadRequest($"Insufficient stock for product {product.Name}. Available: {product.StockQuantity}, Requested: {detailDto.Quantity}");
 
                         product.StockQuantity -= detailDto.Quantity;
-                        _unitOfWork.Products.UpdateAsync(product);
+                        _context.Products.Update(product);
 
                         decimal unitPrice = product.Price;
-                        decimal commissionRate = product.CommissionRate/100  ?? 0;
-                        decimal commissionAmount = commissionRate *  unitPrice * detailDto.Quantity;
+                        decimal commissionRate = product.CommissionRate / 100 ?? 0;
+                        decimal commissionAmount = commissionRate * unitPrice * detailDto.Quantity;
+
+                        // Lấy AffiliateProfileId trực tiếp từ database
+                        Guid? affiliateProfileId = null;
+                        var currentTime = DateTime.UtcNow;
+                        var expiryTime = currentTime.AddDays(-7);
+
+                        // Tìm ClickTracking mới nhất của userId, trong vòng 7 ngày
+                        var latestClick = await _context.ClickTrackings
+                            .Where(ct => ct.UserId == userId && ct.ClickedAt >= expiryTime)
+                            .OrderByDescending(ct => ct.ClickedAt)
+                            .FirstOrDefaultAsync();
+
+                        if (latestClick != null)
+                        {
+                            // Tìm AffiliateLink dựa trên ReferralCode và ProductID
+                            var affiliateLink = await _context.AffiliateProductLinks
+                                .Where(al => al.ReferralCode == latestClick.ReferralCode && al.ProductId == detailDto.ProductId.Value)
+                                .FirstOrDefaultAsync();
+
+                            if (affiliateLink != null)
+                            {
+                                affiliateProfileId = affiliateLink.AffiliateProfileId;
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"No AffiliateLink found for ReferralCode: {latestClick.ReferralCode} and ProductID: {detailDto.ProductId}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"No valid ClickTracking found for UserID: {userId} within 7 days");
+                        }
 
                         orderDetails.Add(new OrderDetail
                         {
@@ -126,23 +160,24 @@ namespace Cosmetics.Controllers
                             ProductId = detailDto.ProductId.Value,
                             Quantity = detailDto.Quantity,
                             UnitPrice = unitPrice,
-                            CommissionAmount = commissionAmount
+                            CommissionAmount = commissionAmount,
+                            AffiliateProfileId = affiliateProfileId // Gán AffiliateProfileId
                         });
                     }
 
                     order.TotalAmount = orderDetails.Sum(od => od.Quantity * od.UnitPrice);
 
-                    await _unitOfWork.Orders.AddAsync(order);
-                    await _unitOfWork.OrderDetails.AddRangeAsync(orderDetails);
-                    await _unitOfWork.CompleteAsync();
+                    _context.Orders.Add(order);
+                    _context.OrderDetails.AddRange(orderDetails);
+                    await _context.SaveChangesAsync();
 
-                    await _unitOfWork.CommitAsync(transaction);
+                    await transaction.CommitAsync();
 
                     return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, order);
                 }
                 catch (Exception ex)
                 {
-                    await _unitOfWork.RollbackAsync(transaction);
+                    await transaction.RollbackAsync();
                     return StatusCode(500, $"An error occurred: {ex.Message}");
                 }
             }
