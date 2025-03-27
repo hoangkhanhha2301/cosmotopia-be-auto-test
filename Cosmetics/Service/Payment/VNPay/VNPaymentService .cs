@@ -34,12 +34,19 @@ namespace Cosmetics.Service.Payment
             Debug.WriteLine($"Current UTC Time: {DateTime.UtcNow.ToString("yyyyMMddHHmmss")}");
             Debug.WriteLine($"System Local Time: {DateTime.Now.ToString("yyyyMMddHHmmss")}");
 
+            // Lấy thông tin Order để lấy TotalAmount
+            var order = await _unitOfWork.Orders.GetByIdAsync(request.OrderId);
+            if (order == null)
+            {
+                throw new Exception($"Order with ID {request.OrderId} not found");
+            }
+
             var paymentTransaction = new PaymentTransaction
             {
                 PaymentTransactionId = Guid.NewGuid(),
                 OrderId = request.OrderId,
-                PaymentMethod = request.PaymentMethod,
-                Amount = request.Amount,
+                PaymentMethod = order.PaymentMethod,
+                Amount = order.TotalAmount ?? 0, // Lấy từ TotalAmount của Order
                 Status = PaymentStatus.Pending,
                 TransactionDate = DateTime.UtcNow,
                 TransactionId = DateTime.Now.Ticks.ToString()
@@ -59,21 +66,21 @@ namespace Cosmetics.Service.Payment
                 throw new Exception("Failed to save payment transaction", ex);
             }
 
-            var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Hardcode vì không dùng IConfiguration
+            var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
             var timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneById);
             var pay = new VnPayLibrary();
 
-            pay.AddRequestData("vnp_Version", "2.1.0"); // Hardcode giá trị mặc định
+            pay.AddRequestData("vnp_Version", "2.1.0");
             pay.AddRequestData("vnp_Command", "pay");
             pay.AddRequestData("vnp_TmnCode", _vnpayTmnCode);
-            pay.AddRequestData("vnp_Amount", ((int)(request.Amount * 100)).ToString());
+            pay.AddRequestData("vnp_Amount", ((int)(order.TotalAmount * 100)).ToString()); // Sử dụng TotalAmount từ Order
             pay.AddRequestData("vnp_CreateDate", timeNow.ToString("yyyyMMddHHmmss"));
             pay.AddRequestData("vnp_CurrCode", "VND");
-            pay.AddRequestData("vnp_IpAddr", GetIpAddress()); // Thay vì dùng HttpContext
+            pay.AddRequestData("vnp_IpAddr", GetIpAddress());
             pay.AddRequestData("vnp_Locale", "vn");
             pay.AddRequestData("vnp_OrderInfo", $"Thanh toan don hang {paymentTransaction.TransactionId}");
             pay.AddRequestData("vnp_OrderType", "billpayment");
-            pay.AddRequestData("vnp_ReturnUrl", _vnpayReturnUrl);
+            pay.AddRequestData("vnp_ReturnUrl", _vnpayReturnUrl); // Sử dụng giá trị đã config
             pay.AddRequestData("vnp_TxnRef", paymentTransaction.TransactionId);
             pay.AddRequestData("vnp_ExpireDate", timeNow.AddMinutes(30).ToString("yyyyMMddHHmmss"));
 

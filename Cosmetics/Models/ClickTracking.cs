@@ -19,6 +19,8 @@ public partial class ClickTracking
 
     public DateTime? ClickedAt { get; set; }
 
+    public int? ClickCount { get; set; }
+
     public virtual AffiliateProductLink Link { get; set; }
 
     public virtual User User { get; set; }
