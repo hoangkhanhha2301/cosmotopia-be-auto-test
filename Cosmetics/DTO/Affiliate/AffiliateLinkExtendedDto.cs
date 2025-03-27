@@ -8,7 +8,7 @@
         public string ProductName { get; set; }
         public decimal Price { get; set; }
         public decimal CommissionRate { get; set; }
-        public string Image { get; set; }
+        public string[] Image { get; set; }
         public string ReferralCode { get; set; }
         public DateTime CreatedAt { get; set; }
     }
