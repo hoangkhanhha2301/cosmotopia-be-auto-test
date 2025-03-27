@@ -152,25 +152,34 @@ namespace Cosmetics.Service.Payment
         }
 
         public async Task<bool> UpdatePaymentStatusAsync(PaymentResponseDTO payment)
-    {
-        if (payment == null)
-            throw new ArgumentNullException(nameof(payment));
+        {
+            if (payment == null)
+                throw new ArgumentNullException(nameof(payment));
 
-        // Fetch the existing payment entity
-        var paymentEntity = await _unitOfWork.PaymentTransactions.GetByTransactionIdAsync(payment.TransactionId);
-        if (paymentEntity == null)
-            return false;
+            // Fetch the existing payment entity
+            var paymentEntity = await _unitOfWork.PaymentTransactions.GetByTransactionIdAsync(payment.TransactionId);
+            if (paymentEntity == null)
+                return false;
 
-        // Update the status
-        paymentEntity.Status = payment.Status;
+            // Check if current status is Pending and new status is valid
+            if (paymentEntity.Status != PaymentStatus.Pending ||
+                (payment.Status != PaymentStatus.Success && payment.Status != PaymentStatus.Failed))
+            {
+                return false;
+            }
 
-        // Save changes via UnitOfWork
-        _unitOfWork.PaymentTransactions.UpdateAsync(paymentEntity);
-        await _unitOfWork.CompleteAsync();
+            // Update the status
+            paymentEntity.Status = payment.Status;
+            paymentEntity.ResponseTime = payment.ResponseTime.ToString("yyyy-MM-dd HH:mm:ss");
 
-        return true;
+            // Save changes via UnitOfWork
+            _unitOfWork.PaymentTransactions.UpdateAsync(paymentEntity);
+            await _unitOfWork.CompleteAsync();
+
+            return true;
+        }
     }
 
-        
-    }
+       
+    
 }
