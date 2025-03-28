@@ -18,6 +18,8 @@ public partial class Order
 
     public OrderStatus Status { get; set; }
 
+    public Guid? AffiliateProfileId { get; set; }
+
     public DateTime? OrderDate { get; set; }
 
     public string PaymentMethod { get; set; }

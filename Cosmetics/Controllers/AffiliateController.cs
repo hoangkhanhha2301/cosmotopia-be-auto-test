@@ -255,5 +255,25 @@ public async Task<IActionResult> GenerateLink([FromBody] GenerateLinkRequestDto 
                 return BadRequest(response);
             }
         }
+
+      
+            [HttpGet("all-earnings")]
+            [Authorize(Roles = "Affiliates")]
+        public async Task<IActionResult> GetAllEarnings()
+            {
+                try
+                {
+                    // Lấy userId từ token (giả sử bạn dùng JWT)
+                    var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+                    var earnings = await _affiliateService.GetAllEarningsAsync(userId);
+                    return Ok(earnings);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+            
+        }
     }
 }
