@@ -341,76 +341,7 @@ namespace Cosmetics.Service.Affiliate
 
         public async Task<List<AffiliateEarningsDto>> GetAllEarningsAsync(int userId)
         {
-            // Lấy thông tin affiliate profile
-            var profile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
-            if (profile == null) throw new Exception("Affiliate profile not found.");
-
-            // Lấy tất cả link affiliate của user
-            var affiliateLinks = await _context.AffiliateProductLinks
-                .Where(apl => apl.AffiliateProfileId == profile.AffiliateProfileId)
-                .ToListAsync();
-
-            if (!affiliateLinks.Any()) return new List<AffiliateEarningsDto>();
-
-            // Tạo danh sách kết quả
-            var earningsList = new List<AffiliateEarningsDto>();
-
-            // Duyệt qua từng link để tính tổng thu nhập
-            foreach (var affiliateLink in affiliateLinks)
-            {
-                var referralCode = affiliateLink.ReferralCode;
-                var productId = affiliateLink.ProductId;
-
-                // Tìm tất cả các click liên quan đến referralCode
-                var clicks = await _context.ClickTrackings
-                    .Where(ct => ct.ReferralCode == referralCode)
-                    .ToListAsync();
-
-                decimal totalEarnings = 0;
-
-                if (clicks.Any())
-                {
-                    // Lấy danh sách user đã click
-                    var userIds = clicks.Select(ct => ct.UserId).Distinct().ToList();
-
-                    // Tìm tất cả đơn hàng liên quan đến các user này và affiliate
-                    var orders = await _context.Orders
-                        .Where(o => userIds.Contains(o.CustomerId) && o.AffiliateProfileId == profile.AffiliateProfileId)
-                        .ToListAsync();
-
-                    if (orders.Any())
-                    {
-                        // Lấy danh sách OrderId
-                        var orderIds = orders.Select(o => o.OrderId).ToList();
-
-                        // Tìm tất cả OrderDetails liên quan đến sản phẩm và đơn hàng
-                        var orderDetails = await _context.OrderDetails
-                            .Where(od => orderIds.Contains(od.OrderId) && od.ProductId == productId)
-                            .ToListAsync();
-
-                        if (orderDetails.Any())
-                        {
-                            // Lấy danh sách OrderDetailId
-                            var orderDetailIds = orderDetails.Select(od => od.OrderDetailId).ToList();
-
-                            // Tính tổng commission từ AffiliateCommissions
-                            totalEarnings = await _context.AffiliateCommissions
-                                .Where(ac => orderDetailIds.Contains(ac.OrderDetailId) && ac.AffiliateProfileId == profile.AffiliateProfileId)
-                                .SumAsync(ac => ac.CommissionAmount);
-                        }
-                    }
-                }
-
-                // Thêm vào danh sách kết quả
-                earningsList.Add(new AffiliateEarningsDto
-                {
-                    ProductId = productId,
-                    ReferralCode = referralCode,
-                    TotalEarnings = totalEarnings
-                });
-            }
-
-            return earningsList;
+            return null;
         }
     }
 }
