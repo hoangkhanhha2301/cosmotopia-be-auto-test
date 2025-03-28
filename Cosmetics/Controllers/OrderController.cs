@@ -226,52 +226,34 @@ namespace Cosmetics.Controllers
             // Cập nhật trạng thái
             order.Status = dto.Status;
 
-            // Nếu trạng thái mới là Delivered, cộng CommissionAmount vào TotalEarning và Balance
+            // Nếu trạng thái mới là Delivered, xử lý commission (bỏ qua nếu affiliate null)
             if (order.Status == OrderStatus.Delivered)
             {
-                // Lấy tất cả OrderDetails liên quan đến Order
                 var orderDetails = await _context.OrderDetails
                     .Where(od => od.OrderId == order.OrderId)
                     .ToListAsync();
 
-                if (!orderDetails.Any())
-                {
-                    Debug.WriteLine($"No OrderDetails found for OrderId: {order.OrderId}");
-                }
-                else
+                if (orderDetails.Any())
                 {
                     foreach (var detail in orderDetails)
                     {
-                        // Kiểm tra AffiliateProfileId có tồn tại không
                         if (detail.AffiliateProfileId.HasValue)
                         {
-                            // Lấy AffiliateProfile tương ứng
                             var affiliateProfile = await _context.AffiliateProfiles
                                 .FindAsync(detail.AffiliateProfileId.Value);
 
                             if (affiliateProfile != null)
                             {
-                                // Cộng CommissionAmount vào TotalEarning và Balance
                                 affiliateProfile.TotalEarnings += detail.CommissionAmount;
                                 affiliateProfile.Ballance += detail.CommissionAmount;
-
                                 _context.AffiliateProfiles.Update(affiliateProfile);
-                                Debug.WriteLine($"Updated AffiliateProfileId: {affiliateProfile.AffiliateProfileId}, TotalEarning: {affiliateProfile.TotalEarnings}, Balance: {affiliateProfile.Ballance}");
                             }
-                            else
-                            {
-                                Debug.WriteLine($"AffiliateProfile not found for AffiliateProfileId: {detail.AffiliateProfileId}");
-                            }
-                        }
-                        else
-                        {
-                            Debug.WriteLine($"OrderDetail with ProductId: {detail.ProductId} has no AffiliateProfileId");
                         }
                     }
                 }
             }
 
-            // Cập nhật Order
+            // Cập nhật Order bất kể affiliate có null hay không
             _context.Orders.Update(order);
             await _context.SaveChangesAsync();
 
