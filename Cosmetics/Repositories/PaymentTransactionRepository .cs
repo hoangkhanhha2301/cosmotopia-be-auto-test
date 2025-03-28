@@ -14,5 +14,12 @@ namespace Cosmetics.Repositories
             return await _context.PaymentTransactions
                 .FirstOrDefaultAsync(p => p.TransactionId == transactionId)!;
         }
+        public async Task<Order?> GetOrderById(Guid id)
+        {
+            return await _context.Orders
+                // Nếu cần lấy luôn thông tin chi tiết đơn hàng
+
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+        }
     }
 }

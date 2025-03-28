@@ -99,7 +99,7 @@ namespace Cosmetics.Controllers
                         CustomerId = userId, // Maps to UserID in Users table (int)
                         SalesStaffId = dto.SalesStaffId,
                         TotalAmount = 0,
-                        Status = OrderStatus.Confirmed,
+                        Status = OrderStatus.Pending,
                         OrderDate = DateTime.UtcNow,
                         PaymentMethod = dto.PaymentMethod,
                         Address = dto.Address
@@ -192,13 +192,23 @@ namespace Cosmetics.Controllers
             var order = await _unitOfWork.Orders.GetByIdAsync(id);
             if (order == null) return NotFound();
 
-            order.CustomerId = dto.CustomerId;
-            order.SalesStaffId = dto.SalesStaffId;
-            order.TotalAmount = dto.TotalAmount;
+            if(order.Status != OrderStatus.Paid || order.Status != OrderStatus.Shipped)
+            {
+                return BadRequest($"Order status can only be updated from  (1) to (2) or (2) to (3). Current status: {order.Status}");
+            }
+            if(dto.Status == OrderStatus.Shipped)
+            {
+                if(order.Status!= OrderStatus.Paid)
+                    return BadRequest($"Order status can only be updated from  (1) to (2) or (2) to (3). Current status: {order.Status}");
+            }
+            if (dto.Status == OrderStatus.Delivered)
+            {
+                if (order.Status != OrderStatus.Shipped)
+                    return BadRequest($"Order status can only be updated from  (1) to (2) or (2) to (3). Current status: {order.Status}");
+            }
+
             order.Status = dto.Status;
-            order.OrderDate = dto.OrderDate;
-            order.PaymentMethod = dto.PaymentMethod;
-            order.Address = dto.Address;
+            
 
             _unitOfWork.Orders.UpdateAsync(order);
             await _unitOfWork.CompleteAsync();
@@ -252,7 +262,7 @@ namespace Cosmetics.Controllers
         }
         [HttpGet("user/orders")]
         [Authorize]
-        public async Task<IActionResult> GetOrdersByUser([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetOrdersByUser([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             if (page < 1 || pageSize < 1)
             {
@@ -314,60 +324,61 @@ namespace Cosmetics.Controllers
 
             return Ok(response);
         }
-        [HttpGet("shipper-confirmed-paid")]
+        //[HttpGet("shipper-confirmed-paid")]
         //[Authorize(Roles = "Shipper")]
-        public async Task<IActionResult> GetConfirmedPaidOrdersForShipper([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            if (page < 1 || pageSize < 1)
-            {
-                return BadRequest("Page and pageSize must be greater than 0.");
-            }
+        //public async Task<IActionResult> GetConfirmedPaidOrdersForShipper([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        //{
+        //    if (page < 1 || pageSize < 1)
+        //    {
+        //        return BadRequest("Page and pageSize must be greater than 0.");
+        //    }
 
-            var orders = await _unitOfWork.Orders.GetConfirmedPaidOrdersForShipperAsync(page, pageSize);
-            if (!orders.Any())
-            {
-                return NotFound("No confirmed and paid orders found for shipping.");
-            }
+        //    var orders = await _unitOfWork.Orders.GetConfirmedPaidOrdersForShipperAsync(page, pageSize);
+        //    if (!orders.Any())
+        //    {
+        //        return NotFound("No confirmed and paid orders found for shipping.");
+        //    }
 
-            var totalCount = await _unitOfWork.Orders.CountAsync(
-                filter: o => o.Status == OrderStatus.Confirmed
-                          && _context.PaymentTransactions.Any(pt => pt.OrderId == o.OrderId && pt.Status == PaymentStatus.Success)
-            );
+        //    var totalCount = await _unitOfWork.Orders.CountAsync(
+        //        filter: o => o.Status == OrderStatus.Confirmed
+        //                  && _context.PaymentTransactions.Any(pt => pt.OrderId == o.OrderId && pt.Status == PaymentStatus.Success)
+        //    );
 
-            var paginatedOrders = orders.Select(order => new OrderResponseDTO
-            {
-                OrderId = order.OrderId,
-                CustomerId = order.CustomerId,
-                CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
-                SalesStaffId = order.SalesStaffId,
-                TotalAmount = order.TotalAmount,
-                Status = order.Status,
-                OrderDate = order.OrderDate,
-                PaymentMethod = order.PaymentMethod,
-                Address = order.Address,
-                OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
-                {
-                    OrderDetailId = od.OrderDetailId,
-                    OrderId = od.OrderId,
-                    ProductId = od.ProductId,
-                    Name = od.Product.Name,
-                    ImageUrl = od.Product.ImageUrls,
-                    Quantity = od.Quantity,
-                    UnitPrice = od.UnitPrice
-                }).ToList() ?? new List<OrderDetailDTO>()
-            }).ToList();
+        //    var paginatedOrders = orders.Select(order => new OrderResponseDTO
+        //    {
+        //        OrderId = order.OrderId,
+        //        CustomerId = order.CustomerId,
+        //        CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
+        //        SalesStaffId = order.SalesStaffId,
+        //        TotalAmount = order.TotalAmount,
+        //        Status = order.Status,
+        //        OrderDate = order.OrderDate,
+        //        PaymentMethod = order.PaymentMethod,
+        //        Address = order.Address,
+        //        OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
+        //        {
+        //            OrderDetailId = od.OrderDetailId,
+        //            OrderId = od.OrderId,
+        //            ProductId = od.ProductId,
+        //            Name = od.Product.Name,
+        //            ImageUrl = od.Product.ImageUrls,
+        //            Quantity = od.Quantity,
+        //            UnitPrice = od.UnitPrice
+        //        }).ToList() ?? new List<OrderDetailDTO>()
+        //    }).ToList();
 
-            var response = new
-            {
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                CurrentPage = page,
-                PageSize = pageSize,
-                Orders = paginatedOrders
-            };
+        //    var response = new
+        //    {
+        //        TotalCount = totalCount,
+        //        TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+        //        CurrentPage = page,
+        //        PageSize = pageSize,
+        //        Orders = paginatedOrders
+        //    };
 
-            return Ok(response);
-        }
+        //    return Ok(response);
+        //}
+
 
     }
 
