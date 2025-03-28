@@ -189,29 +189,82 @@ namespace Cosmetics.Controllers
         {
             if (id != dto.OrderId) return BadRequest();
 
-            var order = await _unitOfWork.Orders.GetByIdAsync(id);
+            var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound();
 
-            if(order.Status != OrderStatus.Paid || order.Status != OrderStatus.Shipped)
+            // Kiểm tra trạng thái hợp lệ: chỉ cho phép chuyển từ Paid (1) sang Shipped (2), hoặc Shipped (2) sang Delivered (3)
+            if (order.Status != OrderStatus.Paid && order.Status != OrderStatus.Shipped)
             {
-                return BadRequest($"Order status can only be updated from  (1) to (2) or (2) to (3). Current status: {order.Status}");
+                return BadRequest($"Order status can only be updated from Paid (1) to Shipped (2) or Shipped (2) to Delivered (3). Current status: {order.Status}");
             }
-            if(dto.Status == OrderStatus.Shipped)
+
+            if (dto.Status == OrderStatus.Shipped)
             {
-                if(order.Status!= OrderStatus.Paid)
-                    return BadRequest($"Order status can only be updated from  (1) to (2) or (2) to (3). Current status: {order.Status}");
+                if (order.Status != OrderStatus.Paid)
+                    return BadRequest($"Order status can only be updated from Paid (1) to Shipped (2). Current status: {order.Status}");
             }
-            if (dto.Status == OrderStatus.Delivered)
+            else if (dto.Status == OrderStatus.Delivered)
             {
                 if (order.Status != OrderStatus.Shipped)
-                    return BadRequest($"Order status can only be updated from  (1) to (2) or (2) to (3). Current status: {order.Status}");
+                    return BadRequest($"Order status can only be updated from Shipped (2) to Delivered (3). Current status: {order.Status}");
+            }
+            else
+            {
+                return BadRequest($"Invalid status update. Only updates to Shipped (2) or Delivered (3) are allowed.");
             }
 
+            // Cập nhật trạng thái
             order.Status = dto.Status;
-            
 
-            _unitOfWork.Orders.UpdateAsync(order);
-            await _unitOfWork.CompleteAsync();
+            // Nếu trạng thái mới là Delivered, cộng CommissionAmount vào TotalEarning và Balance
+            if (order.Status == OrderStatus.Delivered)
+            {
+                // Lấy tất cả OrderDetails liên quan đến Order
+                var orderDetails = await _context.OrderDetails
+                    .Where(od => od.OrderId == order.OrderId)
+                    .ToListAsync();
+
+                if (!orderDetails.Any())
+                {
+                    Debug.WriteLine($"No OrderDetails found for OrderId: {order.OrderId}");
+                }
+                else
+                {
+                    foreach (var detail in orderDetails)
+                    {
+                        // Kiểm tra AffiliateProfileId có tồn tại không
+                        if (detail.AffiliateProfileId.HasValue)
+                        {
+                            // Lấy AffiliateProfile tương ứng
+                            var affiliateProfile = await _context.AffiliateProfiles
+                                .FindAsync(detail.AffiliateProfileId.Value);
+
+                            if (affiliateProfile != null)
+                            {
+                                // Cộng CommissionAmount vào TotalEarning và Balance
+                                affiliateProfile.TotalEarnings += detail.CommissionAmount;
+                                affiliateProfile.Ballance += detail.CommissionAmount;
+
+                                _context.AffiliateProfiles.Update(affiliateProfile);
+                                Debug.WriteLine($"Updated AffiliateProfileId: {affiliateProfile.AffiliateProfileId}, TotalEarning: {affiliateProfile.TotalEarnings}, Balance: {affiliateProfile.Ballance}");
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"AffiliateProfile not found for AffiliateProfileId: {detail.AffiliateProfileId}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"OrderDetail with ProductId: {detail.ProductId} has no AffiliateProfileId");
+                        }
+                    }
+                }
+            }
+
+            // Cập nhật Order
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 
