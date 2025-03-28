@@ -22,7 +22,7 @@ namespace Cosmetics.Service.Affiliate.Interface
 
         Task<List<AffiliateEarningsDto>> GetAllEarningsAsync(int userId);
 
-        //Task<AffiliateSummaryDto> GetAffiliateSummaryAsync(int userId);
+        Task<AffiliateSummaryDto> GetAffiliateSummaryAsync(int userId);
 
     }
 }

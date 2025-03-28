@@ -80,6 +80,7 @@ public async Task<IActionResult> GenerateLink([FromBody] GenerateLinkRequestDto 
         }
 
         [HttpGet("stats")]
+        [Authorize(Roles = "Affiliates")]
         public async Task<IActionResult> GetStats(DateTime startDate, DateTime endDate)
         {
             var userId = int.Parse(User.FindFirst("UserId")?.Value);
@@ -273,6 +274,30 @@ public async Task<IActionResult> GenerateLink([FromBody] GenerateLinkRequestDto 
                 var earnings = await _affiliateService.GetAllEarningsAsync(userId);
 
                 return Ok(earnings);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // GET: api/affiliate/earnings/summary
+        [HttpGet("earnings/summary")]
+        [Authorize(Roles = "Affiliates")]
+        public async Task<IActionResult> GetAffiliateSummary()
+        {
+            try
+            {
+                // Lấy userId từ token (Claims)
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user ID in token." });
+                }
+
+                // Gọi service để lấy tổng thu nhập và tổng số lượt click
+                var summary = await _affiliateService.GetAffiliateSummaryAsync(userId);
+                return Ok(summary);
             }
             catch (Exception ex)
             {
