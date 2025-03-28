@@ -9,6 +9,8 @@ using Cosmetics.Repositories.Interface;
 using Cosmetics.Service.Affiliate.Interface;
 using Microsoft.EntityFrameworkCore;
 using Cosmetics.DTO.OrderDetail;
+using Microsoft.Data.SqlClient;
+using Dapper;
 
 
 namespace Cosmetics.Service.Affiliate
@@ -18,12 +20,14 @@ namespace Cosmetics.Service.Affiliate
         private readonly IAffiliateRepository _affiliateRepository;
         private readonly ComedicShopDBContext _context;
         private readonly IMapper _mapper;
+        private readonly string _connectionString;
 
         public AffiliateService(IAffiliateRepository affiliateRepository, ComedicShopDBContext context, IMapper mapper)
         {
             _affiliateRepository = affiliateRepository;
             _context = context;
             _mapper = mapper;
+            _connectionString = context.Database.GetConnectionString();
         }
 
         public async Task<AffiliateProfileDto> RegisterAffiliateAsync(int userId, AffiliateRegistrationRequestDto request)
@@ -339,7 +343,6 @@ namespace Cosmetics.Service.Affiliate
 
             return links;
         }
-
         public async Task<List<AffiliateEarningsDto>> GetAllEarningsAsync(int userId)
         {
             // Lấy thông tin affiliate profile
@@ -368,7 +371,7 @@ namespace Cosmetics.Service.Affiliate
                 })
                 .ToDictionaryAsync(p => p.ProductId, p => p);
 
-            // Duyệt qua từng link để tính tổng thu nhập
+            // Duyệt qua từng link để tính tổng thu nhập và tổng lượt click
             foreach (var affiliateLink in affiliateLinks)
             {
                 var referralCode = affiliateLink.ReferralCode;
@@ -379,45 +382,57 @@ namespace Cosmetics.Service.Affiliate
                     .Where(ct => ct.ReferralCode == referralCode)
                     .ToListAsync();
 
+                // Tính tổng lượt click dựa trên cột Count (bao gồm cả UserId null)
+                int totalClicks = clicks.Sum(ct => ct.Count ?? 0);
+
                 decimal totalEarnings = 0;
                 if (clicks.Any())
                 {
-                    // Lấy danh sách user đã click
-                    var userIds = clicks.Select(ct => ct.UserId).Distinct().ToList();
+                    // Lấy danh sách user đã click, loại bỏ giá trị null
+                    var userIds = clicks
+                        .Select(ct => ct.UserId)
+                        .Where(id => id.HasValue)
+                        .Select(id => id.Value)
+                        .Distinct()
+                        .ToList();
 
-                    // Tìm tất cả đơn hàng liên quan đến các user này và affiliate
-                    var orders = await _context.Orders
-                        .Where(o => userIds.Contains(o.CustomerId))
-                        .Select(o => new OrderDtoTest
-                        {
-                            OrderId = o.OrderId,
-                            CustomerId = o.CustomerId,
-                            TotalAmount = o.TotalAmount,
-                            Status = o.Status,
-                            OrderDate = o.OrderDate
-                        })
-                        .Where(o => o.AffiliateProfileId == profile.AffiliateProfileId) // Lọc sau khi ánh xạ
-                        .ToListAsync();
-
-                    if (orders.Any())
+                    // Kiểm tra nếu userIds rỗng thì bỏ qua truy vấn
+                    if (userIds.Any())
                     {
-                        // Lấy danh sách OrderId
-                        var orderIds = orders.Select(o => o.OrderId).ToList();
-
-                        // Tìm tất cả OrderDetails liên quan đến sản phẩm và đơn hàng
-                        var orderDetails = await _context.OrderDetails
-                            .Where(od => orderIds.Contains(od.OrderId) && od.ProductId == productId)
-                            .ToListAsync();
-
-                        if (orderDetails.Any())
+                        // Sử dụng Dapper để truy vấn và ánh xạ trực tiếp vào OrderDtoTest
+                        using (var connection = new SqlConnection(_connectionString))
                         {
-                            // Lấy danh sách OrderDetailId
-                            var orderDetailIds = orderDetails.Select(od => od.OrderDetailId).ToList();
+                            var orders = await connection.QueryAsync<OrderDtoTest>(
+                                "SELECT OrderId, CustomerId,TotalAmount, Status, OrderDate " +
+                                "FROM Orders " +
+                                "WHERE CustomerId IN @UserIds",
+                                new { UserIds = userIds });
 
-                            // Tính tổng commission từ AffiliateCommissions
-                            totalEarnings = await _context.AffiliateCommissions
-                                .Where(ac => orderDetailIds.Contains(ac.OrderDetailId) && ac.AffiliateProfileId == profile.AffiliateProfileId)
-                                .SumAsync(ac => ac.CommissionAmount);
+                            var filteredOrders = orders
+                                .Where(o => o.AffiliateProfileId == profile.AffiliateProfileId)
+                                .ToList();
+
+                            if (filteredOrders.Any())
+                            {
+                                // Lấy danh sách OrderId
+                                var orderIds = filteredOrders.Select(o => o.OrderId).ToList();
+
+                                // Tìm tất cả OrderDetails liên quan đến sản phẩm và đơn hàng
+                                var orderDetails = await _context.OrderDetails
+                                    .Where(od => orderIds.Contains(od.OrderId) && od.ProductId == productId)
+                                    .ToListAsync();
+
+                                if (orderDetails.Any())
+                                {
+                                    // Lấy danh sách OrderDetailId
+                                    var orderDetailIds = orderDetails.Select(od => od.OrderDetailId).ToList();
+
+                                    // Tính tổng commission từ AffiliateCommissions
+                                    totalEarnings = await _context.AffiliateCommissions
+                                        .Where(ac => orderDetailIds.Contains(ac.OrderDetailId) && ac.AffiliateProfileId == profile.AffiliateProfileId)
+                                        .SumAsync(ac => ac.CommissionAmount);
+                                }
+                            }
                         }
                     }
                 }
@@ -431,11 +446,14 @@ namespace Cosmetics.Service.Affiliate
                     ProductId = productId,
                     ProductImageUrl = product?.ProductImageUrl ?? "default-image-url",
                     ReferralCode = referralCode,
-                    TotalEarnings = totalEarnings
+                    TotalEarnings = totalEarnings,
+                    TotalClicks = totalClicks
                 });
             }
 
             return earningsList;
         }
+
+
     }
 }

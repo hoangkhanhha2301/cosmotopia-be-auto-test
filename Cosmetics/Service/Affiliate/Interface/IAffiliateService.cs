@@ -13,7 +13,7 @@ namespace Cosmetics.Service.Affiliate.Interface
 
         Task TrackAffiliateClickAsync(string referralCode, int? userId);
 
-        Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId); // Thêm phương thức mới
+        Task<AffiliateProfileResponseDto> GetAffiliateProfileAsync(int userId);
 
         Task<List<TransactionAffiliateDTO>> GetWithdrawalsByAffiliateAsync(int userId);
 
@@ -21,6 +21,8 @@ namespace Cosmetics.Service.Affiliate.Interface
         Task<List<AffiliateLinkExtendedDto>> GetAllLinksAsync(int userId);
 
         Task<List<AffiliateEarningsDto>> GetAllEarningsAsync(int userId);
+
+        //Task<AffiliateSummaryDto> GetAffiliateSummaryAsync(int userId);
 
     }
 }
