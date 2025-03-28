@@ -20,5 +20,7 @@ namespace Cosmetics.Service.Affiliate.Interface
         Task<List<TransactionAffiliateExtendedDTO>> GetAllWithdrawalsAsync();
         Task<List<AffiliateLinkExtendedDto>> GetAllLinksAsync(int userId);
 
+        Task<List<AffiliateEarningsDto>> GetAllEarningsAsync(int userId);
+
     }
 }
