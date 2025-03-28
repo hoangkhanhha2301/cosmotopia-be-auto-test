@@ -10,6 +10,8 @@ namespace Cosmetics.DTO.Order
         public Guid OrderId { get; set; }
         public int? CustomerId { get; set; }
         public string CustomerName { get; set; }
+
+        public string PhoneNumber { get; set; }
         public int? SalesStaffId { get; set; }
         
         public decimal? TotalAmount { get; set; }
