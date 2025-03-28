@@ -455,5 +455,99 @@ namespace Cosmetics.Service.Affiliate
         }
 
 
+
+        public async Task<AffiliateSummaryDto> GetAffiliateSummaryAsync(int userId)
+        {
+            // Lấy thông tin affiliate profile
+            var profile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
+            if (profile == null) throw new Exception("Affiliate profile not found.");
+
+            // Lấy tất cả link affiliate của user
+            var affiliateLinks = await _context.AffiliateProductLinks
+                .Where(apl => apl.AffiliateProfileId == profile.AffiliateProfileId)
+                .ToListAsync();
+
+            if (!affiliateLinks.Any())
+            {
+                return new AffiliateSummaryDto
+                {
+                    TotalEarnings = 0,
+                    TotalClicks = 0
+                };
+            }
+
+            // Lấy danh sách ReferralCode
+            var referralCodes = affiliateLinks.Select(apl => apl.ReferralCode).ToList();
+
+            // Tính tổng lượt click từ ClickTracking (dựa trên cột Count, bao gồm cả UserId null)
+            var totalClicks = await _context.ClickTrackings
+                .Where(ct => referralCodes.Contains(ct.ReferralCode))
+                .SumAsync(ct => ct.Count);
+
+            // Tính tổng thu nhập
+            decimal totalEarnings = 0;
+
+            // Tìm tất cả các click liên quan đến các ReferralCode
+            var clicks = await _context.ClickTrackings
+                .Where(ct => referralCodes.Contains(ct.ReferralCode))
+                .ToListAsync();
+
+            if (clicks.Any())
+            {
+                // Lấy danh sách user đã click, loại bỏ giá trị null
+                var userIds = clicks
+                    .Select(ct => ct.UserId)
+                    .Where(id => id.HasValue)
+                    .Select(id => id.Value)
+                    .Distinct()
+                    .ToList();
+
+                // Kiểm tra nếu userIds rỗng thì bỏ qua truy vấn
+                if (userIds.Any())
+                {
+                    // Sử dụng Dapper để truy vấn và ánh xạ trực tiếp vào OrderDtoTest
+                    using (var connection = new SqlConnection(_connectionString))
+                    {
+                        var orders = await connection.QueryAsync<OrderDtoTest>(
+                            "SELECT OrderId, CustomerId, TotalAmount, Status, OrderDate " +
+                            "FROM Orders " +
+                            "WHERE CustomerId IN @UserIds",
+                            new { UserIds = userIds });
+
+                        var filteredOrders = orders
+                            .Where(o => o.AffiliateProfileId == profile.AffiliateProfileId)
+                            .ToList();
+
+                        if (filteredOrders.Any())
+                        {
+                            // Lấy danh sách OrderId
+                            var orderIds = filteredOrders.Select(o => o.OrderId).ToList();
+
+                            // Tìm tất cả OrderDetails liên quan đến các đơn hàng
+                            var orderDetails = await _context.OrderDetails
+                                .Where(od => orderIds.Contains(od.OrderId))
+                                .ToListAsync();
+
+                            if (orderDetails.Any())
+                            {
+                                // Lấy danh sách OrderDetailId
+                                var orderDetailIds = orderDetails.Select(od => od.OrderDetailId).ToList();
+
+                                // Tính tổng commission từ AffiliateCommissions
+                                totalEarnings = await _context.AffiliateCommissions
+                                    .Where(ac => orderDetailIds.Contains(ac.OrderDetailId) && ac.AffiliateProfileId == profile.AffiliateProfileId)
+                                    .SumAsync(ac => ac.CommissionAmount);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new AffiliateSummaryDto
+            {
+                TotalEarnings = totalEarnings,
+                TotalClicks = totalClicks ?? 0
+            };
+        }
     }
 }
