@@ -64,6 +64,7 @@ namespace Cosmetics.Controllers
                         Name = od.Product.Name, 
                         Quantity = od.Quantity,
                         UnitPrice = od.UnitPrice,
+                        ImageUrl = od.Product.ImageUrls,
                         AffiliateProfileId = od.AffiliateProfileId
                     }).ToList()
                 })
