@@ -26,39 +26,48 @@ namespace Cosmetics.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             if (page < 1 || pageSize < 1)
             {
                 return BadRequest("Page and pageSize must be greater than 0.");
             }
 
-            var orders = await _unitOfWork.Orders.GetAllAsync();
-            var totalCount = orders.Count();
+            // Lấy tất cả orders và include các bảng liên quan
+            var ordersQuery = _context.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .Include(o => o.Customer)
+                .AsQueryable();
 
-            var paginatedOrders = orders
+            var totalCount = await ordersQuery.CountAsync();
+
+            var paginatedOrders = await ordersQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(order => new OrderResponseDTO
                 {
                     OrderId = order.OrderId,
                     CustomerId = order.CustomerId,
-                    CustomerName = $"{order.Customer?.FirstName} {order.Customer?.LastName}".Trim(),
+                    CustomerName = $"{order.Customer.FirstName} {order.Customer.LastName}".Trim(),
                     SalesStaffId = order.SalesStaffId,
                     TotalAmount = order.TotalAmount,
                     Status = order.Status,
                     OrderDate = order.OrderDate,
                     PaymentMethod = order.PaymentMethod,
                     Address = order.Address,
-                    OrderDetails = order.OrderDetails?.Select(od => new OrderDetailDTO
+                    OrderDetails = order.OrderDetails.Select(od => new OrderDetailDTO
                     {
                         OrderDetailId = od.OrderDetailId,
                         OrderId = od.OrderId,
                         ProductId = od.ProductId,
+                        Name = od.Product.Name, 
                         Quantity = od.Quantity,
-                        UnitPrice = od.UnitPrice
-                    }).ToList() ?? new List<OrderDetailDTO>()
-                }).ToList();
+                        UnitPrice = od.UnitPrice,
+                        AffiliateProfileId = od.AffiliateProfileId
+                    }).ToList()
+                })
+                .ToListAsync();
 
             var response = new
             {
