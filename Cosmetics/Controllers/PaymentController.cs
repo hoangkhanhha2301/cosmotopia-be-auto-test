@@ -9,6 +9,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System;
+using Cosmetics.Models;
+using Cosmetics.Repositories.UnitOfWork;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Cosmetics.Controllers
 {
@@ -17,12 +20,15 @@ namespace Cosmetics.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly string _vnpayHashSecret;
 
-        public PaymentController(IPaymentService paymentService, IConfiguration configuration)
+        public PaymentController(IPaymentService paymentService, IConfiguration configuration, IUnitOfWork unitOfWork)
         {
             _paymentService = paymentService ?? throw new ArgumentNullException(nameof(paymentService));
             _vnpayHashSecret = configuration["VNPay:HashSecret"] ?? throw new ArgumentNullException("VNPay HashSecret is not configured.");
+            _unitOfWork = unitOfWork;
+
         }
 
         [HttpPost("create-payment")]
@@ -153,7 +159,28 @@ namespace Cosmetics.Controllers
                 var success = await _paymentService.UpdatePaymentStatusAsync(updatedPayment);
                 if (!success)
                     return BadRequest($"Failed to update payment status. Either the status is invalid or the transaction cannot be updated.");
+                var OrderId = payment.OrderId;
+                if (OrderId != null)
+                {
+                    var order = await _unitOfWork.Orders.GetByIdAsync(OrderId); 
 
+                    if (order == null) return NotFound();
+                    if (order == null)
+                        return NotFound($"No order found for this payment with Transaction ID: {payment.TransactionId}");
+
+                    // Cập nhật trạng thái đơn hàng dựa vào trạng thái thanh toán
+                    if (updatedPayment.Status == PaymentStatus.Success)
+                    {
+                        order.Status = OrderStatus.Paid;
+                    }
+                    else
+                    {
+                        order.Status = OrderStatus.Cancelled;
+                    }
+
+                    await _unitOfWork.Orders.UpdateAsync(order);
+                    await _unitOfWork.CompleteAsync();
+                }
                 string statusMessage = updatedPayment.Status == PaymentStatus.Success
                     ? "Success (1)"
                     : "Fail (2)";
@@ -169,7 +196,19 @@ namespace Cosmetics.Controllers
                 return StatusCode(500, $"An error occurred while updating the payment status: {ex.Message}");
             }
         }
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteOrder(Guid id)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(id);
+            if (order == null) return NotFound();
+
+            _unitOfWork.Orders.Delete(order);
+            await _unitOfWork.CompleteAsync();
+            return NoContent();
+        }
 
     }
+
 
 }

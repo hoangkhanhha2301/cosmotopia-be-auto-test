@@ -230,7 +230,7 @@ public partial class ComedicShopDBContext : DbContext
             entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.Status).HasDefaultValue(OrderStatus.Confirmed);
+            entity.Property(e => e.Status).HasDefaultValue(OrderStatus.Pending);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
