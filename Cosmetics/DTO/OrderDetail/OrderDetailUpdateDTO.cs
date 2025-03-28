@@ -1,4 +1,6 @@
-﻿namespace Cosmetics.DTO.OrderDetail
+﻿using Cosmetics.Enum;
+
+namespace Cosmetics.DTO.OrderDetail
 {
     public class OrderDetailUpdateDTO
     {
@@ -9,6 +11,17 @@
         public decimal? UnitPrice { get; set; }
         public decimal? CommissionAmount { get; set; }
         public Guid? AffiliateProfileId { get; set; }
+    }
+
+
+    public class OrderDtoTest
+    {
+        public Guid OrderId { get; set; }
+        public int? CustomerId { get; set; }
+        public Guid? AffiliateProfileId { get; set; }
+        public decimal? TotalAmount { get; set; }
+        public OrderStatus Status { get; set; }
+        public DateTime? OrderDate { get; set; }
     }
 
 }

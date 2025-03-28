@@ -34,4 +34,7 @@ namespace Cosmetics.DTO.Product
         public CategoryDTO  Category { get; set; }
         public BrandDTO Brand { get; set; }
     }
+
+
+
 }
