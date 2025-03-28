@@ -141,6 +141,7 @@ namespace Cosmetics.Service.Payment
 
             return new PaymentResponseDTO
             {
+                OrderId = paymentEntity.OrderId,
                 TransactionId = paymentEntity.TransactionId,
                 Amount = paymentEntity.Amount,
                 Status = paymentEntity.Status,

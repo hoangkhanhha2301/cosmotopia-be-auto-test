@@ -34,7 +34,7 @@ namespace Cosmetics.Repositories
         public async Task<IEnumerable<Order>> GetConfirmedPaidOrdersForShipperAsync(int page, int pageSize)
         {
             return await GetAsync(
-                filter: o => o.Status == OrderStatus.Confirmed
+                filter: o => o.Status == OrderStatus.Pending
                           && _context.PaymentTransactions.Any(pt => pt.OrderId == o.OrderId && pt.Status == PaymentStatus.Success),
                 includeOperations: new Func<IQueryable<Order>, IQueryable<Order>>[]
                 {
@@ -45,6 +45,7 @@ namespace Cosmetics.Repositories
                 pageSize: pageSize
             );
         }
+    
     }
 
 }
