@@ -3,11 +3,12 @@ using System.Linq;
 using AutoMapper;
 using Cosmetics.DTO.Affiliate;
 using Cosmetics.Enum;
-
+using Cosmetics.DTO.Affiliate;
 using Cosmetics.Models;
 using Cosmetics.Repositories.Interface;
 using Cosmetics.Service.Affiliate.Interface;
 using Microsoft.EntityFrameworkCore;
+using Cosmetics.DTO.OrderDetail;
 
 
 namespace Cosmetics.Service.Affiliate
@@ -341,7 +342,100 @@ namespace Cosmetics.Service.Affiliate
 
         public async Task<List<AffiliateEarningsDto>> GetAllEarningsAsync(int userId)
         {
-            return null;
+            // Lấy thông tin affiliate profile
+            var profile = await _affiliateRepository.GetAffiliateProfileByUserIdAsync(userId);
+            if (profile == null) throw new Exception("Affiliate profile not found.");
+
+            // Lấy tất cả link affiliate của user
+            var affiliateLinks = await _context.AffiliateProductLinks
+                .Where(apl => apl.AffiliateProfileId == profile.AffiliateProfileId)
+                .ToListAsync();
+
+            if (!affiliateLinks.Any()) return new List<AffiliateEarningsDto>();
+
+            // Tạo danh sách kết quả
+            var earningsList = new List<AffiliateEarningsDto>();
+
+            // Lấy thông tin sản phẩm từ bảng Products và ánh xạ vào ProductDto
+            var productIds = affiliateLinks.Select(apl => apl.ProductId).ToList();
+            var products = await _context.Products
+                .Where(p => productIds.Contains(p.ProductId))
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.ProductId,
+                    ProductImageUrl = p.ImageUrls != null && p.ImageUrls.Length > 0 ? p.ImageUrls[0] : "default-image-url",
+                    Name = p.Name
+                })
+                .ToDictionaryAsync(p => p.ProductId, p => p);
+
+            // Duyệt qua từng link để tính tổng thu nhập
+            foreach (var affiliateLink in affiliateLinks)
+            {
+                var referralCode = affiliateLink.ReferralCode;
+                var productId = affiliateLink.ProductId;
+
+                // Tìm tất cả các click liên quan đến referralCode
+                var clicks = await _context.ClickTrackings
+                    .Where(ct => ct.ReferralCode == referralCode)
+                    .ToListAsync();
+
+                decimal totalEarnings = 0;
+                if (clicks.Any())
+                {
+                    // Lấy danh sách user đã click
+                    var userIds = clicks.Select(ct => ct.UserId).Distinct().ToList();
+
+                    // Tìm tất cả đơn hàng liên quan đến các user này và affiliate
+                    var orders = await _context.Orders
+                        .Where(o => userIds.Contains(o.CustomerId))
+                        .Select(o => new OrderDtoTest
+                        {
+                            OrderId = o.OrderId,
+                            CustomerId = o.CustomerId,
+                            TotalAmount = o.TotalAmount,
+                            Status = o.Status,
+                            OrderDate = o.OrderDate
+                        })
+                        .Where(o => o.AffiliateProfileId == profile.AffiliateProfileId) // Lọc sau khi ánh xạ
+                        .ToListAsync();
+
+                    if (orders.Any())
+                    {
+                        // Lấy danh sách OrderId
+                        var orderIds = orders.Select(o => o.OrderId).ToList();
+
+                        // Tìm tất cả OrderDetails liên quan đến sản phẩm và đơn hàng
+                        var orderDetails = await _context.OrderDetails
+                            .Where(od => orderIds.Contains(od.OrderId) && od.ProductId == productId)
+                            .ToListAsync();
+
+                        if (orderDetails.Any())
+                        {
+                            // Lấy danh sách OrderDetailId
+                            var orderDetailIds = orderDetails.Select(od => od.OrderDetailId).ToList();
+
+                            // Tính tổng commission từ AffiliateCommissions
+                            totalEarnings = await _context.AffiliateCommissions
+                                .Where(ac => orderDetailIds.Contains(ac.OrderDetailId) && ac.AffiliateProfileId == profile.AffiliateProfileId)
+                                .SumAsync(ac => ac.CommissionAmount);
+                        }
+                    }
+                }
+
+                // Lấy thông tin sản phẩm
+                var product = products.ContainsKey(productId) ? products[productId] : null;
+
+                // Thêm vào danh sách kết quả
+                earningsList.Add(new AffiliateEarningsDto
+                {
+                    ProductId = productId,
+                    ProductImageUrl = product?.ProductImageUrl ?? "default-image-url",
+                    ReferralCode = referralCode,
+                    TotalEarnings = totalEarnings
+                });
+            }
+
+            return earningsList;
         }
     }
 }

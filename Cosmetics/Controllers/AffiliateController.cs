@@ -256,5 +256,29 @@ public async Task<IActionResult> GenerateLink([FromBody] GenerateLinkRequestDto 
             }
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Affiliates")]
+        public async Task<IActionResult> GetAllEarnings()
+        {
+            try
+            {
+                // Lấy userId từ token (giả sử bạn dùng JWT)
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized("Invalid user ID in token.");
+                }
+
+                // Gọi phương thức GetAllEarningsAsync từ AffiliateService
+                var earnings = await _affiliateService.GetAllEarningsAsync(userId);
+
+                return Ok(earnings);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }
