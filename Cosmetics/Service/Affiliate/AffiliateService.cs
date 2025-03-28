@@ -403,11 +403,12 @@ namespace Cosmetics.Service.Affiliate
                         using (var connection = new SqlConnection(_connectionString))
                         {
                             var orders = await connection.QueryAsync<OrderDtoTest>(
-                                "SELECT OrderId, CustomerId,TotalAmount, Status, OrderDate " +
+                                "SELECT OrderId, CustomerId, TotalAmount, Status, OrderDate " +
                                 "FROM Orders " +
                                 "WHERE CustomerId IN @UserIds",
                                 new { UserIds = userIds });
 
+                            // Lọc các đơn hàng có AffiliateProfileId khớp với profile
                             var filteredOrders = orders
                                 .Where(o => o.AffiliateProfileId == profile.AffiliateProfileId)
                                 .ToList();
@@ -445,6 +446,7 @@ namespace Cosmetics.Service.Affiliate
                 {
                     ProductId = productId,
                     ProductImageUrl = product?.ProductImageUrl ?? "default-image-url",
+                    ProductName = product?.Name ?? "Unknown Product", // Thêm ProductName
                     ReferralCode = referralCode,
                     TotalEarnings = totalEarnings,
                     TotalClicks = totalClicks
