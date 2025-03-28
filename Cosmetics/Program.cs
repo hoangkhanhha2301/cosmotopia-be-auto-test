@@ -22,11 +22,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 // JWT Configuration
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(5192); // Cho phép HTTP
-    options.ListenAnyIP(7191, listenOptions => listenOptions.UseHttps()); // Cho phép HTTPS
-});
+//builder.WebHost.ConfigureKestrel(options =>
+//{
+//    options.ListenAnyIP(5192); // Cho phép HTTP
+//    options.ListenAnyIP(7191, listenOptions => listenOptions.UseHttps()); // Cho phép HTTPS
+//});
 builder.Services.Configure<AppSetting>(builder.Configuration.GetSection("AppSettings"));
 var secretKey = builder.Configuration["AppSettings:SecretKey"];
 var secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
@@ -95,12 +95,6 @@ builder.Services.AddSwaggerGen(option =>
 
 
 
-// Add services to the container
-builder.Services.AddHttpsRedirection(options =>
-{
-    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
-    options.HttpsPort = 443; // Cổng HTTPS của SmarterASP.NET
-});
 
 
 builder.Services.AddDbContext<ComedicShopDBContext>(options =>
@@ -183,19 +177,19 @@ var app = builder.Build();
 // Configure middleware, static files, authentication, authorization, etc.
 
     app.UseCors("corspolicy");
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 //app.UseSwagger();
 //app.UseSwaggerUI();
 
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+//if (app.Environment.IsDevelopment())
+//{
+  
+//}
+app.UseSwagger();
+app.UseSwaggerUI();
 //app.UseHttpsRedirection();
 
 app.UseAuthorization();
