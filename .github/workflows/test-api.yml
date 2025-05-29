@@ -1,0 +1,29 @@
+name: Build & Test API
+
+on:
+  push:
+    branches: [ "main", "auto-test", "feat/config-auto-test" ]
+  pull_request:
+    branches: [ "main", "auto-test", "feat/config-auto-test" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
