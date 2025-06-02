@@ -65,14 +65,17 @@ namespace Cosmetics.Tests
             // Arrange
             var dto = new BrandCreateDTO { Name = "New Brand", IsPremium = true };
             _mockUnitOfWork.Setup(x => x.Brands.brandNameExist(dto.Name)).ReturnsAsync(false);
-            _mockMapper.Setup(m => m.Map<BrandDTO>(It.IsAny<Brand>())).Returns(new BrandDTO { Name = dto.Name });
+            _mockMapper.Setup(m => m.Map<BrandDTO>(It.IsAny<Brand>()))
+                       .Returns(new BrandDTO { Name = dto.Name });
 
             // Act
             var result = await _controller.Create(dto);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Contains("success", okResult.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+            var response = Assert.IsAssignableFrom<ApiResponse>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.Equal("Brand Category Successfully.", response.Message);
         }
 
         [Fact]
@@ -87,7 +90,9 @@ namespace Cosmetics.Tests
 
             // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Contains("products", badRequest.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+            var response = Assert.IsAssignableFrom<ApiResponse>(badRequest.Value);
+            Assert.False(response.Success);
+            Assert.Equal("Cannot delete a brand that has products!", response.Message);
         }
 
         [Fact]
@@ -97,15 +102,20 @@ namespace Cosmetics.Tests
             var id = Guid.NewGuid();
             var dto = new BrandUpdateDTO { Name = "Updated Brand", IsPremium = false };
             var existing = new Brand { BrandId = id, Name = "Old", IsPremium = true };
+
             _mockUnitOfWork.Setup(x => x.Brands.GetByIdAsync(id)).ReturnsAsync(existing);
-            _mockMapper.Setup(m => m.Map<BrandDTO>(It.IsAny<Brand>())).Returns(new BrandDTO { Name = dto.Name });
+            _mockMapper.Setup(m => m.Map<BrandDTO>(It.IsAny<Brand>()))
+                       .Returns(new BrandDTO { Name = dto.Name });
 
             // Act
             var result = await _controller.Update(id, dto);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Contains("updated", okResult.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+            var response = Assert.IsAssignableFrom<ApiResponse>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.Equal("Brand updated successfully", response.Message);
         }
+
     }
 }
